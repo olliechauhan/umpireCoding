@@ -1,6 +1,5 @@
 node_modules/
 .DS_Store
 *.mp4
-node_modules/
-.DS_Store
-*.mp4
+.claude/
+native-host/com.umpirecoder.postprocess.json

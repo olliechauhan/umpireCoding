@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Umpire Coder</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <h1>Umpire Coder</h1>
+      </div>
+      <button id="settings-btn" title="Settings" aria-label="Open settings">⚙</button>
+    </header>
+
+    <!-- Pre-match setup (shown when no active match) -->
+    <section id="setup-screen">
+      <h2>Match Setup</h2>
+      <form id="setup-form" novalidate>
+        <div class="field-group">
+          <div class="field">
+            <label for="umpire1">Umpire 1</label>
+            <input type="text" id="umpire1" placeholder="Full name" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="umpire2">Umpire 2</label>
+            <input type="text" id="umpire2" placeholder="Full name" autocomplete="off">
+          </div>
+        </div>
+        <div class="field">
+          <label for="date">Date <span class="opt">(optional)</span></label>
+          <input type="date" id="date">
+        </div>
+        <div class="field">
+          <label for="competition">Competition <span class="opt">(optional)</span></label>
+          <input type="text" id="competition" placeholder="e.g. National League" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="venue">Venue <span class="opt">(optional)</span></label>
+          <input type="text" id="venue" placeholder="e.g. Example Arena" autocomplete="off">
+        </div>
+        <div id="error-msg" class="error" hidden></div>
+        <button type="submit" id="start-btn">▶ Start Match</button>
+      </form>
+    </section>
+
+    <!-- Active match indicator (shown when a match is already running) -->
+    <section id="active-screen" hidden>
+      <div class="active-badge">● Match In Progress</div>
+      <p id="active-meta" class="active-meta"></p>
+      <button id="resume-btn">Show Overlay on This Tab</button>
+      <button id="end-early-btn" class="danger-btn">End Match Now</button>
+    </section>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

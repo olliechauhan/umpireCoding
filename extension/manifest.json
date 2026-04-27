@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "Umpire Coder",
+  "version": "1.0.0",
+  "description": "Hockey match official performance analysis — tagging overlay with OBS recording control.",
+  "permissions": [
+    "storage",
+    "downloads",
+    "tabs",
+    "scripting",
+    "activeTab",
+    "nativeMessaging"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "Umpire Coder",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["overlay/overlay.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

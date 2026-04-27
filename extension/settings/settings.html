@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Umpire Coder</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="page">
+    <header class="page-header">
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <h1>Umpire Coder — Settings</h1>
+      </div>
+    </header>
+
+    <main>
+
+      <!-- ── Tag Types ─────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2>Tag Types</h2>
+        <p class="hint">These appear as buttons in the overlay. Drag to reorder is not yet supported — delete and re-add to reorder.</p>
+        <div id="tag-list" class="tag-list"></div>
+        <div class="add-row">
+          <input type="text" id="new-tag" placeholder="New tag type name…" autocomplete="off">
+          <button id="add-tag-btn" class="secondary-btn">+ Add</button>
+        </div>
+      </section>
+
+      <!-- ── OBS Connection ─────────────────────────────────────────────── -->
+      <section class="card">
+        <h2>OBS Connection</h2>
+        <p class="hint">
+          First use: OBS → Tools → WebSocket Server Settings → Enable WebSocket server. Set a password and enter it below.<br><br>
+          In OBS, add a <strong>Window Capture</strong> source to your scene pointing at Chrome
+          (Sources → + → Window Capture → select your Chrome window).
+          The extension only controls Start/Stop recording — the source stays as-is.
+        </p>
+        <div class="field-row">
+          <div class="field grow">
+            <label for="obs-host">Host</label>
+            <input type="text" id="obs-host" placeholder="localhost">
+          </div>
+          <div class="field narrow">
+            <label for="obs-port">Port</label>
+            <input type="number" id="obs-port" placeholder="4455" min="1" max="65535">
+          </div>
+        </div>
+        <div class="field">
+          <label for="obs-password">WebSocket Password</label>
+          <input type="password" id="obs-password" placeholder="Leave blank if none set">
+        </div>
+        <div class="action-row">
+          <button id="test-conn-btn" class="secondary-btn">Test Connection</button>
+          <span id="test-conn-status" class="inline-status"></span>
+        </div>
+      </section>
+
+      <!-- ── OBS Output ─────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2>OBS Output Settings</h2>
+        <div class="field">
+          <label for="obs-output-dir">Recording Output Directory</label>
+          <input type="text" id="obs-output-dir" placeholder="C:\Users\…\Videos">
+          <span class="field-hint">Where OBS saves the full-match recording.</span>
+        </div>
+        <div class="field-row three-col">
+          <div class="field">
+            <label for="obs-format">Format</label>
+            <select id="obs-format">
+              <option value="mp4">MP4</option>
+              <option value="mkv">MKV</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="obs-resolution">Resolution</label>
+            <select id="obs-resolution">
+              <option value="1920x1080">1080p (1920×1080)</option>
+              <option value="1280x720">720p (1280×720)</option>
+              <option value="3840x2160">4K (3840×2160)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="obs-framerate">Framerate</label>
+            <select id="obs-framerate">
+              <option value="30">30 fps</option>
+              <option value="25">25 fps</option>
+              <option value="60">60 fps</option>
+            </select>
+          </div>
+        </div>
+        <div class="action-row">
+          <button id="apply-obs-btn" class="primary-btn">Apply OBS Settings</button>
+          <span id="obs-status" class="inline-status"></span>
+        </div>
+      </section>
+
+      <!-- ── Clip Output ────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2>Post-Processing Output</h2>
+        <div class="field">
+          <label for="clip-output-dir">Clips &amp; Report Output Directory</label>
+          <input type="text" id="clip-output-dir" placeholder="C:\Users\…\Documents\umpire-clips">
+          <span class="field-hint">Where the post-processing script saves clips and the PDF report.</span>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="page-footer">
+      <button id="save-btn" class="primary-btn large">Save Settings</button>
+      <span id="save-status" class="inline-status"></span>
+    </footer>
+  </div>
+
+  <script src="settings.js"></script>
+</body>
+</html>

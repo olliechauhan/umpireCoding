@@ -1,0 +1,16 @@
+{
+  "name": "umpire-coder-post-processing",
+  "version": "1.0.0",
+  "description": "Post-processing tool: cut video clips and generate PDF reports from Umpire Coder event logs",
+  "type": "module",
+  "scripts": {
+    "start": "node clip_cutter.js",
+    "report": "node report_generator.js"
+  },
+  "dependencies": {
+    "pdfkit": "^0.15.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
