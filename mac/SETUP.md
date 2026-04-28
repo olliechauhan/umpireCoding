@@ -22,14 +22,22 @@ You need to install four pieces of software. Install them in the order listed be
 Homebrew is a package manager for Mac — it makes installing developer tools simple. You will use it to install ffmpeg.
 
 1. Open **Terminal** (press Cmd + Space, type `Terminal`, press Enter)
-2. Paste the following command and press **Enter**:
+2. First, install Apple's Command Line Developer Tools by pasting this command and pressing **Enter**:
+
+```
+xcode-select --install
+```
+
+   A window will pop up — click **Install** and wait for it to finish before continuing. If you see an error saying the software is not available on the update server, restart your Mac and try again.
+
+3. Once that is done, paste the following command and press **Enter**:
 
 ```
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-3. You may be asked for your Mac password — type it and press Enter (you won't see the characters as you type, that's normal)
-4. Wait for it to finish. It will say `Installation successful` when done.
+4. You may be asked for your Mac password — type it and press Enter (you won't see the characters as you type, that's normal)
+5. Wait for it to finish. It will say `Installation successful` when done.
 
 > If you see a message at the end saying to run two commands starting with `echo` and `eval`, run both of them before continuing.
 
