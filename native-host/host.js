@@ -6,8 +6,9 @@
  * Protocol: each message = 4-byte LE uint32 length + UTF-8 JSON body.
  */
 
-import { execFileSync } from 'child_process';
-import { mkdirSync, writeFileSync } from 'fs';
+import { execFileSync, spawn } from 'child_process';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import net from 'net';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -55,6 +56,52 @@ function sendMessage(obj) {
   process.stdout.write(Buffer.concat([header, body]));
 }
 
+// ── OBS launch ────────────────────────────────────────────────────────────────
+
+const OBS_PATH = {
+  win32:  'C:\\Program Files\\obs-studio\\bin\\64bit\\obs64.exe',
+  darwin: '/Applications/OBS.app',
+};
+
+function waitForPort(port, timeoutMs = 20_000) {
+  return new Promise((resolve, reject) => {
+    const deadline = Date.now() + timeoutMs;
+    const attempt = () => {
+      const sock = net.createConnection({ port, host: '127.0.0.1' });
+      sock.once('connect', () => { sock.destroy(); resolve(); });
+      sock.once('error', () => {
+        sock.destroy();
+        if (Date.now() >= deadline) {
+          reject(new Error('OBS did not become ready within 20 seconds'));
+        } else {
+          setTimeout(attempt, 500);
+        }
+      });
+    };
+    attempt();
+  });
+}
+
+async function launchObs(port) {
+  // If OBS is already running the port will already be open — nothing to do.
+  try { await waitForPort(port, 1_000); return; } catch { /* not running yet */ }
+
+  const obsPath = OBS_PATH[process.platform];
+  if (!obsPath || !existsSync(obsPath)) {
+    throw new Error(
+      `OBS not found at ${obsPath}. Make sure OBS is installed in the default location.`
+    );
+  }
+
+  if (process.platform === 'darwin') {
+    spawn('open', ['-a', 'OBS'], { detached: true, stdio: 'ignore' }).unref();
+  } else {
+    spawn(obsPath, [], { detached: true, stdio: 'ignore' }).unref();
+  }
+
+  await waitForPort(port, 20_000);
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -64,6 +111,17 @@ async function main() {
   } catch (err) {
     sendMessage({ success: false, error: 'Failed to read message: ' + err.message });
     process.exit(1);
+  }
+
+  // ── LAUNCH_OBS ──────────────────────────────────────────────────────────────
+  if (msg.type === 'LAUNCH_OBS') {
+    try {
+      await launchObs(msg.obsPort || 4455);
+      sendMessage({ success: true });
+    } catch (err) {
+      sendMessage({ success: false, error: err.message });
+    }
+    return;
   }
 
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;

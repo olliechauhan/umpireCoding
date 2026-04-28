@@ -76,8 +76,11 @@ OBS records the livestream video during the match.
 
 1. Go to **https://obsproject.com**
 2. Click **macOS** to download
-3. Open the downloaded `.dmg` file, drag OBS into your Applications folder
-4. Open OBS from Applications. If you see a security warning, go to **System Settings → Privacy & Security** and click **Open Anyway**
+3. Open the downloaded `.dmg` file, drag OBS into your **Applications** folder
+
+   > **Important:** OBS must be dragged into the Applications folder (`/Applications`). Umpire Coder opens OBS automatically and will not find it if it is anywhere else.
+
+4. Open OBS from Applications once to accept any security prompts. If you see a security warning, go to **System Settings → Privacy & Security** and click **Open Anyway**. You only need to do this once.
 
 ### 1e. ffmpeg
 
@@ -236,12 +239,11 @@ OBS needs to record the Chrome window that has the livestream playing.
 Here is the workflow for each match:
 
 ### Before the match
-1. Open OBS — it will be ready in the background
-2. Open the livestream in Chrome
-3. Click the **Umpire Coder** icon in Chrome
-4. Fill in the umpire names (required) and optionally the date, competition, and venue
-5. Click **Start Match**
-6. The recording starts in OBS and the tagging overlay appears on screen
+1. Open the livestream in Chrome
+2. Click the **Umpire Coder** icon in Chrome
+3. Fill in the umpire names (required) and optionally the date, competition, and venue
+4. Click **Start Match**
+5. OBS will open automatically and begin recording. The tagging overlay will appear on screen.
 
 ### During the match
 - Use the overlay to tag events:

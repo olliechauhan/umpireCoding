@@ -79,8 +79,16 @@ async function handle(message) {
 
       const { settings } = await chrome.storage.local.get('settings');
 
-      // Connect to OBS and start recording.
-      // Errors are non-fatal — tagging continues even if OBS is unreachable.
+      // Auto-launch OBS if it is not already running, then connect and record.
+      // Both steps are non-fatal — tagging continues even if OBS is unreachable.
+      try {
+        await sendNativeMessage('com.umpirecoder.postprocess', {
+          type: 'LAUNCH_OBS',
+          obsPort: settings.obsPort,
+        });
+      } catch (err) {
+        console.warn('[BG] OBS auto-launch unavailable:', err.message);
+      }
       try {
         await obs.connect(settings.obsHost, settings.obsPort, settings.obsPassword);
         await obs.startRecording();
