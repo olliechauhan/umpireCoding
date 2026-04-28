@@ -9,7 +9,7 @@
 import { execFileSync, spawn } from 'child_process';
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import net from 'net';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -258,7 +258,14 @@ async function main() {
         { cwd: POST_DIR, encoding: 'utf8', timeout: 600_000 }
       );
       results.push({ type: 'clips', success: true, message: out.trim() });
-      try { unlinkSync(videoPath); } catch { /* non-fatal */ }
+      // Delete the original recording now that all clips are cut.
+      // Normalize the path — OBS on Windows often returns forward-slash paths.
+      try {
+        unlinkSync(resolve(videoPath));
+        results.push({ type: 'cleanup', success: true, message: 'Original recording deleted.' });
+      } catch (err) {
+        results.push({ type: 'cleanup', success: false, error: `Could not delete recording: ${err.message}` });
+      }
     } catch (err) {
       const detail = err.stderr ? err.stderr.toString().trim().split('\n').pop() : err.message;
       results.push({ type: 'clips', success: false, error: detail });

@@ -149,6 +149,52 @@ export class OBSWebSocket {
     return { outputPath: data?.outputPath ?? null };
   }
 
+  // ── Window capture ─────────────────────────────────────────────────────────
+
+  /**
+   * Find every window_capture source in the current scene and re-point it at
+   * the Chrome window whose title best matches `tabTitle`.
+   * Non-fatal: all errors are caught and ignored.
+   */
+  async updateWindowCaptureToChromeWindow(tabTitle) {
+    try {
+      const { currentProgramSceneName } = await this._call('GetCurrentProgramScene');
+      const { sceneItems = [] } = await this._call('GetSceneItemList', {
+        sceneName: currentProgramSceneName,
+      });
+
+      for (const item of sceneItems) {
+        if (!item.inputKind?.includes('window_capture')) continue;
+
+        let propertyItems = [];
+        try {
+          const res = await this._call('GetInputPropertiesListPropertyItems', {
+            inputName: item.sourceName,
+            propertyName: 'window',
+          });
+          propertyItems = res.propertyItems ?? [];
+        } catch { continue; }
+
+        const chromeWindows = propertyItems.filter(w =>
+          w.itemValue?.toLowerCase().includes('chrome.exe') ||
+          w.itemName?.toLowerCase().includes('chrome')
+        );
+        if (!chromeWindows.length) continue;
+
+        // Prefer the window whose display name includes the current tab title.
+        const best = (tabTitle && chromeWindows.find(w => w.itemName?.includes(tabTitle)))
+          ?? chromeWindows[0];
+
+        try {
+          await this._call('SetInputSettings', {
+            inputName: item.sourceName,
+            inputSettings: { window: best.itemValue },
+          });
+        } catch { /* non-fatal */ }
+      }
+    } catch { /* non-fatal — don't block match start */ }
+  }
+
   // ── Settings ───────────────────────────────────────────────────────────────
 
   /** Push video and output-directory settings to OBS. */

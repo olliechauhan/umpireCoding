@@ -96,8 +96,12 @@ async function handle(message) {
         };
       }
 
+      // Get the active tab before connecting so we can point OBS at it.
+      const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
       try {
         await obs.connect(settings.obsHost, settings.obsPort, settings.obsPassword);
+        await obs.updateWindowCaptureToChromeWindow(activeTab?.title ?? '');
         await obs.startRecording();
       } catch (err) {
         return {
@@ -106,7 +110,7 @@ async function handle(message) {
         };
       }
 
-      return startMatchAndInjectOverlay(message.matchData);
+      return startMatchAndInjectOverlay(message.matchData, activeTab);
     }
 
     case 'ABANDON_MATCH': {
@@ -251,7 +255,7 @@ async function handle(message) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function startMatchAndInjectOverlay(matchData) {
+async function startMatchAndInjectOverlay(matchData, tab) {
   const startTime = Date.now();
   const matchState = {
     active: true,
@@ -261,8 +265,8 @@ async function startMatchAndInjectOverlay(matchData) {
     nextEventId: 1,
   };
   await chrome.storage.local.set({ matchState });
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tab) await injectOverlay(tab.id);
+  const activeTab = tab ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
+  if (activeTab) await injectOverlay(activeTab.id);
   return { success: true, startTime };
 }
 
