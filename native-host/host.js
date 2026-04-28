@@ -144,7 +144,10 @@ async function launchObs(port, customPath) {
   if (process.platform === 'darwin') {
     spawn('open', [obsPath], { detached: true, stdio: 'ignore' }).unref();
   } else {
-    spawn(obsPath, ['--minimize-to-tray'], { detached: true, stdio: 'ignore', cwd: dirname(obsPath) }).unref();
+    execFileSync('powershell', [
+      '-NonInteractive', '-Command',
+      `Start-Process -FilePath "${obsPath}" -WorkingDirectory "${dirname(obsPath)}" -WindowStyle Minimized`,
+    ]);
   }
 
   await waitForPort(port, 20_000);
