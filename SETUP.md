@@ -119,13 +119,10 @@ C:\Users\[YourName]\Documents\umpireCoding\native-host
 3. Paste the following command and press **Enter**:
 
 ```
-.\install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-   > If you see a message saying "running scripts is disabled", paste this command first and press Enter, then try again:
-   > ```
-   > Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
-   > ```
+   > This form of the command runs the script directly and sidesteps Windows script-blocking, so you do not need to change any settings first.
 
 4. The script will install the PDF library automatically, then ask you to paste your **Extension ID** from Step 3. Paste it in and press **Enter**.
 
@@ -240,10 +237,11 @@ Here is the workflow for each match:
 - Try clicking the extension icon and clicking "Show Overlay on This Tab"
 
 **"running scripts is disabled" when running install.ps1**
-- Run this command in PowerShell first, then try `.\install.ps1` again:
+- Use the bypass form of the command instead of `.\install.ps1`:
   ```
-  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  powershell -ExecutionPolicy Bypass -File .\install.ps1
   ```
+- `Set-ExecutionPolicy RemoteSigned` alone is not enough — files downloaded via git are marked as coming from the internet and will still be blocked unless you use the bypass form above.
 
 **The extension disappeared from Chrome after restarting**
 - Extensions loaded in Developer mode stay loaded unless you remove them. If it disappeared, repeat Step 3.
