@@ -15,6 +15,10 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const POST_DIR  = join(__dirname, '..', 'post-processing');
 
+// Use the same Node binary running this script so post-processing works
+// even when Chrome's PATH doesn't include node.
+const NODE = process.execPath;
+
 function slugPart(str) {
   return (str || '').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
 }
@@ -256,7 +260,7 @@ async function main() {
 
   // ── PDF report (always) ───────────────────────────────────────────────────
   try {
-    const out = execFileSync('node', ['report_generator.js', '--json', jsonPath, '--out', matchDir], {
+    const out = execFileSync(NODE, ['report_generator.js', '--json', jsonPath, '--out', matchDir], {
       cwd: POST_DIR, encoding: 'utf8', timeout: 30_000,
     });
     results.push({ type: 'report', success: true, message: out.trim() });
@@ -268,7 +272,7 @@ async function main() {
   if (videoPath) {
     try {
       const out = execFileSync(
-        'node',
+        NODE,
         ['clip_cutter.js', '--json', jsonPath, '--video', videoPath, '--out', matchDir],
         { cwd: POST_DIR, encoding: 'utf8', timeout: 600_000 }
       );
