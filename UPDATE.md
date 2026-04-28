@@ -1,7 +1,6 @@
 # Umpire Coder — Update Instructions
 
-If you have already completed the full setup, follow the steps below to apply the latest fix.
-This update enables automatic clip cutting at the end of a match.
+There was a bug that prevented clips from being cut automatically at the end of a match. This has now been fixed. Follow the steps below for your operating system — the whole thing takes about a minute.
 
 ---
 
@@ -18,9 +17,11 @@ This update enables automatic clip cutting at the end of a match.
    ```
    git pull
    ```
-   You should see `native-host/package.json` in the output — that confirms the fix has downloaded.
+   You should see a line mentioning `native-host/package.json` in the output — this confirms the fix has downloaded.
 
-4. Open **Google Chrome**, go to `chrome://extensions`, find **Umpire Coder**, and click the **circular reload arrow (↺)**.
+4. Open **Google Chrome**, go to `chrome://extensions`, find **Umpire Coder**, and click the **circular reload arrow (↺)**
+
+That is it. Clips will now be generated automatically when you end a match.
 
 ---
 
@@ -37,15 +38,12 @@ This update enables automatic clip cutting at the end of a match.
    ```
    git pull
    ```
+   You should see a line mentioning `native-host/package.json` in the output — this confirms the fix has downloaded.
 
-4. Paste this command and press **Enter**:
-   ```
-   cd mac/native-host && ./install.sh
-   ```
-   The script will ask for your **Extension ID** — go to `chrome://extensions` in Chrome, find Umpire Coder, and copy the ID from underneath it.
+4. Open **Google Chrome**, go to `chrome://extensions`, find **Umpire Coder**, and click the **circular reload arrow (↺)**
 
-5. Open **Google Chrome**, go to `chrome://extensions`, find **Umpire Coder**, and click the **circular reload arrow (↺)**.
+That is it. Clips will now be generated automatically when you end a match.
 
 ---
 
-*After completing these steps, clips will be generated automatically when you end a match.*
+*You do not need to re-run the setup script. Everything else you set up previously is still in place.*
