@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  // Default date to today
   document.getElementById('date').value = new Date().toISOString().slice(0, 10);
 
   const { matchState } = await msg({ type: 'GET_MATCH_STATE' });
@@ -14,42 +13,75 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('setup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    const matchData = {
+      umpire1:     val('umpire1'),
+      umpire2:     val('umpire2'),
+      date:        val('date'),
+      competition: val('competition'),
+      venue:       val('venue'),
+    };
 
-    const umpire1    = val('umpire1');
-    const umpire2    = val('umpire2');
-    const date       = val('date');
-    const competition = val('competition');
-    const venue      = val('venue');
-
-    if (!umpire1 || !umpire2) {
+    if (!matchData.umpire1 || !matchData.umpire2) {
       showError('Both umpire names are required.');
       return;
     }
 
-    const startBtn = document.getElementById('start-btn');
-    startBtn.disabled = true;
-    startBtn.textContent = 'Starting…';
-    hideError();
-
-    const result = await msg({
-      type: 'START_MATCH',
-      matchData: { umpire1, umpire2, date, competition, venue },
-    });
-
-    if (result.error) {
-      showError(result.error);
-      startBtn.disabled = false;
-      startBtn.textContent = '▶ Start Match';
-      return;
-    }
-
-    window.close(); // overlay is now injected into the active tab
+    await attemptStart(matchData);
   });
 });
 
+// ── Start flow ────────────────────────────────────────────────────────────────
+
+async function attemptStart(matchData) {
+  hideError();
+  showScreen('loading-screen');
+
+  const result = await msg({ type: 'START_MATCH', matchData });
+
+  if (result.obsError) {
+    showObsError(result.errorMessage, matchData);
+    return;
+  }
+  if (result.error) {
+    showScreen('setup-screen');
+    showError(result.error);
+    return;
+  }
+
+  window.close();
+}
+
+function showObsError(errorMessage, matchData) {
+  document.getElementById('obs-error-msg').textContent = errorMessage;
+  showScreen('obs-error-screen');
+
+  document.getElementById('retry-btn').onclick = () => attemptStart(matchData);
+
+  document.getElementById('skip-video-btn').onclick = async () => {
+    showScreen('loading-screen');
+    document.getElementById('loading-msg').textContent = 'Starting without video…';
+    const result = await msg({ type: 'START_MATCH_SKIP_OBS', matchData });
+    if (result.error) {
+      showScreen('setup-screen');
+      showError(result.error);
+    } else {
+      window.close();
+    }
+  };
+
+  document.getElementById('cancel-start-btn').onclick = () => {
+    showScreen('setup-screen');
+  };
+}
+
+function showScreen(id) {
+  for (const s of ['setup-screen', 'loading-screen', 'obs-error-screen', 'active-screen']) {
+    document.getElementById(s).hidden = s !== id;
+  }
+}
+
 function showActiveScreen(matchState) {
-  document.getElementById('setup-screen').hidden = true;
-  document.getElementById('active-screen').hidden = false;
+  showScreen('active-screen');
 
   const m = matchState.matchData;
   document.getElementById('active-meta').textContent =

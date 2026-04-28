@@ -73,46 +73,44 @@ async function handle(message) {
 
     case 'START_MATCH': {
       const { matchState: current } = await chrome.storage.local.get('matchState');
-      if (current?.active) {
-        return { error: 'A match is already in progress.' };
-      }
+      if (current?.active) return { error: 'A match is already in progress.' };
 
       const { settings } = await chrome.storage.local.get('settings');
 
-      // Auto-launch OBS if it is not already running, then connect and record.
-      // Both steps are non-fatal — tagging continues even if OBS is unreachable.
+      // Launch OBS via the native host — fatal if it fails so the popup can
+      // present the error and offer retry / skip / cancel.
       try {
         await sendNativeMessage('com.umpirecoder.postprocess', {
           type: 'LAUNCH_OBS',
           obsPort: settings.obsPort,
         });
       } catch (err) {
-        console.warn('[BG] OBS auto-launch unavailable:', err.message);
+        const notInstalled = /not found|not registered/i.test(err.message);
+        return {
+          obsError: true,
+          errorMessage: notInstalled
+            ? 'The Umpire Coder helper does not appear to be set up on this computer. Please run the setup script and try again.'
+            : `OBS could not be opened: ${err.message}`,
+        };
       }
+
       try {
         await obs.connect(settings.obsHost, settings.obsPort, settings.obsPassword);
         await obs.startRecording();
       } catch (err) {
-        console.warn('[BG] OBS unavailable — match continues without recording:', err.message);
+        return {
+          obsError: true,
+          errorMessage: `OBS opened but could not start recording: ${err.message}`,
+        };
       }
 
-      const startTime = Date.now();
-      const matchState = {
-        active: true,
-        startTime,
-        matchData: message.matchData,
-        events: [],
-        nextEventId: 1,
-      };
-      await chrome.storage.local.set({ matchState });
+      return startMatchAndInjectOverlay(message.matchData);
+    }
 
-      // Inject the overlay into the active tab
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab) {
-        await injectOverlay(tab.id);
-      }
-
-      return { success: true, startTime };
+    case 'START_MATCH_SKIP_OBS': {
+      const { matchState: current } = await chrome.storage.local.get('matchState');
+      if (current?.active) return { error: 'A match is already in progress.' };
+      return startMatchAndInjectOverlay(message.matchData);
     }
 
     case 'REINJECT_OVERLAY': {
@@ -223,6 +221,21 @@ async function handle(message) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function startMatchAndInjectOverlay(matchData) {
+  const startTime = Date.now();
+  const matchState = {
+    active: true,
+    startTime,
+    matchData,
+    events: [],
+    nextEventId: 1,
+  };
+  await chrome.storage.local.set({ matchState });
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab) await injectOverlay(tab.id);
+  return { success: true, startTime };
+}
 
 async function injectOverlay(tabId) {
   try {
