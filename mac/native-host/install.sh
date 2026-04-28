@@ -14,6 +14,18 @@ MANIFEST_NAME="com.umpirecoder.postprocess"
 MANIFEST_PATH="$SCRIPT_DIR/$MANIFEST_NAME.json"
 CHROME_HOSTS_DIR="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
 
+# Locate node — check common install locations if not on PATH
+NODE_PATH="$(which node 2>/dev/null)"
+if [ -z "$NODE_PATH" ]; then
+  for candidate in /opt/homebrew/bin/node /usr/local/bin/node; do
+    if [ -x "$candidate" ]; then NODE_PATH="$candidate"; break; fi
+  done
+fi
+if [ -z "$NODE_PATH" ]; then
+  echo "Error: node not found. Make sure Node.js is installed (https://nodejs.org) and try again."
+  exit 1
+fi
+
 echo ""
 echo "Umpire Coder - Native Host Setup"
 echo "================================"
@@ -43,6 +55,12 @@ fi
 echo ""
 echo "Step 3/3  Registering native messaging host..."
 
+# Write host.sh with the absolute node path so Chrome can launch it
+# without inheriting the user's shell PATH.
+cat > "$HOST_SH" <<SCRIPT
+#!/bin/bash
+exec "$NODE_PATH" "\$(dirname "\$0")/host.js"
+SCRIPT
 chmod +x "$HOST_SH"
 
 cat > "$MANIFEST_PATH" <<EOF
