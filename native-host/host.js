@@ -144,13 +144,24 @@ async function launchObs(port, customPath) {
   if (process.platform === 'darwin') {
     spawn('open', [obsPath], { detached: true, stdio: 'ignore' }).unref();
   } else {
-    execFileSync('powershell', [
-      '-NonInteractive', '-Command',
-      `Start-Process -FilePath "${obsPath}" -WorkingDirectory "${dirname(obsPath)}" -WindowStyle Minimized`,
-    ]);
+    spawn(obsPath, [], { detached: true, stdio: 'ignore', cwd: dirname(obsPath) }).unref();
   }
 
   await waitForPort(port, 20_000);
+
+  if (process.platform === 'win32') minimizeObsWindow();
+}
+
+function minimizeObsWindow() {
+  try {
+    execFileSync('powershell', ['-NonInteractive', '-Command', `
+$p = Get-Process obs64 -ErrorAction SilentlyContinue | Sort-Object StartTime -Descending | Select-Object -First 1
+if ($p -and $p.MainWindowHandle -ne 0) {
+  Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class ObsHelper { [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow); }'
+  [ObsHelper]::ShowWindow($p.MainWindowHandle, 6)
+}
+    `], { encoding: 'utf8', timeout: 5_000 });
+  } catch { /* non-fatal — window minimize is best-effort */ }
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────────
