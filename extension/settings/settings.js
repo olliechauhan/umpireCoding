@@ -10,6 +10,7 @@ function populate(s) {
   set('obs-host',       s.obsHost       ?? 'localhost');
   set('obs-port',       s.obsPort       ?? 4455);
   set('obs-password',   s.obsPassword   ?? '');
+  set('obs-exe-path',   s.obsExePath    ?? '');
   set('obs-output-dir', s.outputDirectory      ?? '');
   set('obs-format',     s.obsOutputFormat      ?? 'mp4');
   set('obs-resolution', s.obsResolution        ?? '1920x1080');
@@ -91,6 +92,30 @@ function tagsFromDOM() {
 // ── Events ────────────────────────────────────────────────────────────────────
 
 function bindEvents() {
+  // Browse buttons for path fields
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.browse-btn');
+    if (!btn) return;
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '…';
+
+    const result = await msg({
+      type:   'PICK_PATH',
+      kind:   btn.dataset.kind,
+      prompt: btn.dataset.prompt || 'Select',
+      filter: btn.dataset.filter || '',
+    });
+
+    btn.disabled = false;
+    btn.textContent = originalText;
+
+    if (result?.success && result.path) {
+      document.getElementById(btn.dataset.target).value = result.path;
+    }
+  });
+
   // Add tag
   const addBtn = document.getElementById('add-tag-btn');
   const newTagInput = document.getElementById('new-tag');
@@ -161,15 +186,16 @@ function bindEvents() {
 
 function gather() {
   return {
-    obsHost:            get('obs-host')        || 'localhost',
-    obsPort:            parseInt(get('obs-port'))  || 4455,
-    obsPassword:        get('obs-password'),
-    outputDirectory:    get('obs-output-dir'),
-    obsOutputFormat:    get('obs-format'),
-    obsResolution:      get('obs-resolution'),
-    obsFramerate:       parseInt(get('obs-framerate')) || 30,
+    obsHost:             get('obs-host')             || 'localhost',
+    obsPort:             parseInt(get('obs-port'))   || 4455,
+    obsPassword:         get('obs-password'),
+    obsExePath:          get('obs-exe-path'),
+    outputDirectory:     get('obs-output-dir'),
+    obsOutputFormat:     get('obs-format'),
+    obsResolution:       get('obs-resolution'),
+    obsFramerate:        parseInt(get('obs-framerate')) || 30,
     clipOutputDirectory: get('clip-output-dir'),
-    tagTypes:           tagsFromDOM(),
+    tagTypes:            tagsFromDOM(),
   };
 }
 

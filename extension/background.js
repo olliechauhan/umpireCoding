@@ -21,6 +21,7 @@ const DEFAULT_SETTINGS = {
   obsHost: 'localhost',
   obsPort: 4455,
   obsPassword: '',
+  obsExePath: '',
   outputDirectory: '',
   obsOutputFormat: 'mp4',
   obsResolution: '1920x1080',
@@ -83,6 +84,7 @@ async function handle(message) {
         await sendNativeMessage('com.umpirecoder.postprocess', {
           type: 'LAUNCH_OBS',
           obsPort: settings.obsPort,
+          obsExePath: settings.obsExePath || '',
         });
       } catch (err) {
         const notInstalled = /not found|not registered/i.test(err.message);
@@ -205,6 +207,15 @@ async function handle(message) {
         return { success: true, obsWebSocketVersion: info.obsWebSocketVersion };
       } catch (err) {
         return { error: err.message };
+      }
+    }
+
+    case 'PICK_PATH': {
+      try {
+        const result = await sendNativeMessage('com.umpirecoder.postprocess', message);
+        return result;
+      } catch (err) {
+        return { success: false, error: err.message };
       }
     }
 

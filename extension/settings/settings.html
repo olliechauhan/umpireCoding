@@ -51,6 +51,18 @@
           <label for="obs-password">WebSocket Password</label>
           <input type="password" id="obs-password" placeholder="Leave blank if none set">
         </div>
+        <div class="field">
+          <label for="obs-exe-path">OBS Location</label>
+          <div class="path-row">
+            <input type="text" id="obs-exe-path" placeholder="Default install location is used if left blank">
+            <button class="browse-btn secondary-btn"
+                    data-target="obs-exe-path"
+                    data-kind="file"
+                    data-prompt="Select OBS"
+                    data-filter="OBS (obs64.exe)|obs64.exe|All executables (*.exe)|*.exe">Browse…</button>
+          </div>
+          <span class="field-hint">Leave blank to use the default install location (C:\Program Files\obs-studio on Windows, /Applications/OBS.app on Mac).</span>
+        </div>
         <div class="action-row">
           <button id="test-conn-btn" class="secondary-btn">Test Connection</button>
           <span id="test-conn-status" class="inline-status"></span>
@@ -62,7 +74,13 @@
         <h2>OBS Output Settings</h2>
         <div class="field">
           <label for="obs-output-dir">Recording Output Directory</label>
-          <input type="text" id="obs-output-dir" placeholder="C:\Users\…\Videos">
+          <div class="path-row">
+            <input type="text" id="obs-output-dir" placeholder="C:\Users\…\Videos">
+            <button class="browse-btn secondary-btn"
+                    data-target="obs-output-dir"
+                    data-kind="folder"
+                    data-prompt="Select recording output folder">Browse…</button>
+          </div>
           <span class="field-hint">Where OBS saves the full-match recording.</span>
         </div>
         <div class="field-row three-col">
@@ -101,7 +119,13 @@
         <h2>Post-Processing Output</h2>
         <div class="field">
           <label for="clip-output-dir">Clips &amp; Report Output Directory</label>
-          <input type="text" id="clip-output-dir" placeholder="C:\Users\…\Documents\umpire-clips">
+          <div class="path-row">
+            <input type="text" id="clip-output-dir" placeholder="C:\Users\…\Documents\umpire-clips">
+            <button class="browse-btn secondary-btn"
+                    data-target="clip-output-dir"
+                    data-kind="folder"
+                    data-prompt="Select clips and report output folder">Browse…</button>
+          </div>
           <span class="field-hint">Where the post-processing script saves clips and the PDF report.</span>
         </div>
       </section>

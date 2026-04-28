@@ -56,6 +56,53 @@ function sendMessage(obj) {
   process.stdout.write(Buffer.concat([header, body]));
 }
 
+// ── Path pickers ─────────────────────────────────────────────────────────────
+
+function pickPathWindows(kind, prompt, filter) {
+  const isFolder = kind === 'folder';
+  const script = isFolder
+    ? [
+        'Add-Type -AssemblyName System.Windows.Forms',
+        `$d = New-Object System.Windows.Forms.FolderBrowserDialog`,
+        `$d.Description = '${prompt}'`,
+        `$d.ShowNewFolderButton = $true`,
+        `if ($d.ShowDialog() -eq 'OK') { $d.SelectedPath }`,
+      ].join('; ')
+    : [
+        'Add-Type -AssemblyName System.Windows.Forms',
+        `$d = New-Object System.Windows.Forms.OpenFileDialog`,
+        `$d.Title = '${prompt}'`,
+        `$d.Filter = '${filter || 'All files (*.*)|*.*'}'`,
+        `if ($d.ShowDialog() -eq 'OK') { $d.FileName }`,
+      ].join('; ');
+
+  return execFileSync('powershell', ['-Sta', '-NonInteractive', '-Command', script], {
+    encoding: 'utf8', timeout: 120_000,
+  }).trim();
+}
+
+function pickPathMac(kind, prompt) {
+  const isFolder = kind === 'folder';
+  const script = isFolder
+    ? `POSIX path of (choose folder with prompt "${prompt}")`
+    : `POSIX path of (choose file with prompt "${prompt}" default location "/Applications")`;
+  return execFileSync('osascript', ['-e', script], {
+    encoding: 'utf8', timeout: 120_000,
+  }).trim();
+}
+
+function pickPath(kind, prompt, filter) {
+  try {
+    const raw = process.platform === 'win32'
+      ? pickPathWindows(kind, prompt, filter)
+      : pickPathMac(kind, prompt);
+    return raw || null;
+  } catch (err) {
+    if (/cancel/i.test(err.message) || /1$/.test(String(err.status))) return null;
+    throw err;
+  }
+}
+
 // ── OBS launch ────────────────────────────────────────────────────────────────
 
 const OBS_PATH = {
@@ -82,19 +129,20 @@ function waitForPort(port, timeoutMs = 20_000) {
   });
 }
 
-async function launchObs(port) {
+async function launchObs(port, customPath) {
   // If OBS is already running the port will already be open — nothing to do.
   try { await waitForPort(port, 1_000); return; } catch { /* not running yet */ }
 
-  const obsPath = OBS_PATH[process.platform];
+  const obsPath = customPath || OBS_PATH[process.platform];
   if (!obsPath || !existsSync(obsPath)) {
-    throw new Error(
-      `OBS not found at ${obsPath}. Make sure OBS is installed in the default location.`
-    );
+    const hint = customPath
+      ? `Check the OBS Path setting in Umpire Coder Settings.`
+      : `Make sure OBS is installed in the default location, or set a custom path in Umpire Coder Settings.`;
+    throw new Error(`OBS not found at: ${obsPath || '(no path set)'}. ${hint}`);
   }
 
   if (process.platform === 'darwin') {
-    spawn('open', ['-a', 'OBS'], { detached: true, stdio: 'ignore' }).unref();
+    spawn('open', [obsPath], { detached: true, stdio: 'ignore' }).unref();
   } else {
     spawn(obsPath, [], { detached: true, stdio: 'ignore' }).unref();
   }
@@ -113,11 +161,20 @@ async function main() {
     process.exit(1);
   }
 
-  // ── LAUNCH_OBS ──────────────────────────────────────────────────────────────
   if (msg.type === 'LAUNCH_OBS') {
     try {
-      await launchObs(msg.obsPort || 4455);
+      await launchObs(msg.obsPort || 4455, msg.obsExePath || '');
       sendMessage({ success: true });
+    } catch (err) {
+      sendMessage({ success: false, error: err.message });
+    }
+    return;
+  }
+
+  if (msg.type === 'PICK_PATH') {
+    try {
+      const path = pickPath(msg.kind, msg.prompt || 'Select', msg.filter);
+      sendMessage({ success: true, path });
     } catch (err) {
       sendMessage({ success: false, error: err.message });
     }
