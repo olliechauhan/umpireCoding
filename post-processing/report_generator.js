@@ -41,16 +41,22 @@ function sanitiseFilename(str) {
     .substring(0, 60);
 }
 
-function clipsFolder(meta) {
-  const date = (meta.date || 'unknown-date').replace(/\//g, '-');
-  const comp = sanitiseFilename(meta.competition || 'match');
-  return `${date}_${comp}_clips`;
+function slugPart(str) {
+  return (str || '').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function matchSlug(meta) {
+  const date = meta.date || 'unknown-date';
+  const ump1 = slugPart(meta.umpire1) || 'Umpire1';
+  const ump2 = slugPart(meta.umpire2) || 'Umpire2';
+  const t1   = slugPart(meta.team1);
+  const t2   = slugPart(meta.team2);
+  const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';
+  return `${date}_${teams}${ump1}_${ump2}`;
 }
 
 function reportFilename(meta) {
-  const date = (meta.date || 'unknown-date').replace(/\//g, '-');
-  const comp = sanitiseFilename(meta.competition || 'match');
-  return `${date}_${comp}_report.pdf`;
+  return `${matchSlug(meta)}_report.pdf`;
 }
 
 function countBy(events, key) {
@@ -242,11 +248,12 @@ function main() {
   const meta   = raw.match  || {};
   const events = raw.events || [];
 
-  const baseDir  = outDir ? resolve(outDir) : resolve(jsonPath, '..');
-  const clipsDir = join(baseDir, clipsFolder(meta));
-  mkdirSync(clipsDir, { recursive: true });
+  // When called from the native host, outDir is already the per-match folder.
+  // When called standalone, create a subfolder named after the match.
+  const baseDir = outDir ? resolve(outDir) : join(resolve(jsonPath, '..'), matchSlug(meta));
+  mkdirSync(baseDir, { recursive: true });
 
-  const pdfPath = join(clipsDir, reportFilename(meta));
+  const pdfPath = join(baseDir, reportFilename(meta));
   const doc     = new PDFDocument({ autoFirstPage: true, size: 'A4', margin: MARGIN });
   const stream  = createWriteStream(pdfPath);
 

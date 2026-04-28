@@ -61,6 +61,20 @@ function sanitise(str) {
     .substring(0, 40);
 }
 
+function slugPart(str) {
+  return (str || '').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function matchSlug(meta) {
+  const date = meta.date || 'unknown-date';
+  const ump1 = slugPart(meta.umpire1) || 'Umpire1';
+  const ump2 = slugPart(meta.umpire2) || 'Umpire2';
+  const t1   = slugPart(meta.team1);
+  const t2   = slugPart(meta.team2);
+  const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';
+  return `${date}_${teams}${ump1}_${ump2}`;
+}
+
 function secsToHHMMSS(secs) {
   const h = Math.floor(secs / 3600);
   const m = Math.floor((secs % 3600) / 60);
@@ -68,11 +82,6 @@ function secsToHHMMSS(secs) {
   return [h, m, s].map(v => String(v).padStart(2, '0')).join('-');
 }
 
-function folderName(meta) {
-  const date   = (meta.date || 'unknown-date').replace(/\//g, '-');
-  const comp   = sanitise(meta.competition || 'match');
-  return `${date}_${comp}_clips`;
-}
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
@@ -107,7 +116,9 @@ function main() {
     ? resolve(outDir)
     : resolve(videoPath, '..'); // same folder as the video by default
 
-  const clipsDir = join(baseDir, folderName(meta));
+  // When called from the native host, baseDir is already the per-match folder.
+  // When called standalone (no --out), create a subfolder named after the match.
+  const clipsDir = outDir ? baseDir : join(baseDir, matchSlug(meta));
   mkdirSync(clipsDir, { recursive: true });
   console.log(`Output folder: ${clipsDir}\n`);
 

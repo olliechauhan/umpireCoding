@@ -277,6 +277,20 @@ async function injectOverlay(tabId) {
   }
 }
 
+function slugPart(str) {
+  return (str || '').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function matchSlug(d) {
+  const date  = (d.date || 'unknown-date');
+  const ump1  = slugPart(d.umpire1) || 'Umpire1';
+  const ump2  = slugPart(d.umpire2) || 'Umpire2';
+  const t1    = slugPart(d.team1);
+  const t2    = slugPart(d.team2);
+  const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';
+  return `${date}_${teams}${ump1}_${ump2}`;
+}
+
 function buildEventLog(matchState) {
   const { matchData, events } = matchState;
   const log = {
@@ -284,15 +298,15 @@ function buildEventLog(matchState) {
       date:        matchData.date,
       competition: matchData.competition,
       venue:       matchData.venue,
+      team1:       matchData.team1,
+      team2:       matchData.team2,
       umpire1:     matchData.umpire1,
       umpire2:     matchData.umpire2,
     },
     events,
   };
   const jsonData = JSON.stringify(log, null, 2);
-  const date     = (matchData.date || '').replace(/-/g, '');
-  const comp     = (matchData.competition || 'match').replace(/\s+/g, '_');
-  const filename = `${date}_${comp}_events.json`;
+  const filename = `${matchSlug(matchData)}_events.json`;
   return { jsonData, filename };
 }
 

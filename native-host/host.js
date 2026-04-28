@@ -13,7 +13,21 @@ import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const POST_DIR   = join(__dirname, '..', 'post-processing');
+const POST_DIR  = join(__dirname, '..', 'post-processing');
+
+function slugPart(str) {
+  return (str || '').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
+}
+
+function matchSlug(meta) {
+  const date = meta.date || 'unknown-date';
+  const ump1 = slugPart(meta.umpire1) || 'Umpire1';
+  const ump2 = slugPart(meta.umpire2) || 'Umpire2';
+  const t1   = slugPart(meta.team1);
+  const t2   = slugPart(meta.team2);
+  const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';
+  return `${date}_${teams}${ump1}_${ump2}`;
+}
 
 // ── Native messaging I/O ──────────────────────────────────────────────────────
 
@@ -197,19 +211,26 @@ async function main() {
 
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
 
-  const outDir = clipOutputDir || join(
+  const baseDir = clipOutputDir || join(
     process.env.USERPROFILE || process.env.HOME || '.',
     'Documents', 'umpire-clips'
   );
 
-  try { mkdirSync(outDir, { recursive: true }); }
+  // Compute the per-match subfolder from the JSON content
+  let matchDir = join(baseDir, 'match');
+  try {
+    const log = JSON.parse(jsonData);
+    matchDir = join(baseDir, matchSlug(log.match || {}));
+  } catch { /* keep default */ }
+
+  try { mkdirSync(matchDir, { recursive: true }); }
   catch (err) {
     sendMessage({ success: false, error: 'Cannot create output dir: ' + err.message });
     process.exit(1);
   }
 
-  // Save the JSON log to the output directory
-  const jsonPath = join(outDir, jsonFilename);
+  // Save the JSON log inside the match folder
+  const jsonPath = join(matchDir, jsonFilename);
   try { writeFileSync(jsonPath, jsonData, 'utf8'); }
   catch (err) {
     sendMessage({ success: false, error: 'Cannot save JSON: ' + err.message });
@@ -220,7 +241,7 @@ async function main() {
 
   // ── PDF report (always) ───────────────────────────────────────────────────
   try {
-    const out = execFileSync('node', ['report_generator.js', '--json', jsonPath, '--out', outDir], {
+    const out = execFileSync('node', ['report_generator.js', '--json', jsonPath, '--out', matchDir], {
       cwd: POST_DIR, encoding: 'utf8', timeout: 30_000,
     });
     results.push({ type: 'report', success: true, message: out.trim() });
@@ -233,7 +254,7 @@ async function main() {
     try {
       const out = execFileSync(
         'node',
-        ['clip_cutter.js', '--json', jsonPath, '--video', videoPath, '--out', outDir],
+        ['clip_cutter.js', '--json', jsonPath, '--video', videoPath, '--out', matchDir],
         { cwd: POST_DIR, encoding: 'utf8', timeout: 600_000 }
       );
       results.push({ type: 'clips', success: true, message: out.trim() });
@@ -246,7 +267,7 @@ async function main() {
     results.push({ type: 'clips', success: false, error: 'No OBS recording path — clips skipped.' });
   }
 
-  sendMessage({ success: true, results, outDir });
+  sendMessage({ success: true, results, outDir: matchDir });
 }
 
 main().catch(err => {

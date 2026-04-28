@@ -16,6 +16,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const matchData = {
       umpire1:     val('umpire1'),
       umpire2:     val('umpire2'),
+      team1:       val('team1'),
+      team2:       val('team2'),
       date:        val('date'),
       competition: val('competition'),
       venue:       val('venue'),
@@ -84,8 +86,9 @@ function showActiveScreen(matchState) {
   showScreen('active-screen');
 
   const m = matchState.matchData;
+  const teams = (m.team1 && m.team2) ? `${m.team1} v ${m.team2}\n` : '';
   document.getElementById('active-meta').textContent =
-    `${m.umpire1} & ${m.umpire2}\n${m.competition} · ${m.venue}`;
+    `${teams}${m.umpire1} & ${m.umpire2}\n${m.competition || ''} ${m.venue ? '· ' + m.venue : ''}`.trim();
 
   document.getElementById('settings-btn').addEventListener('click', openSettings);
 
