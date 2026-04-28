@@ -7,9 +7,10 @@
  */
 
 import { execFileSync, spawn } from 'child_process';
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import net from 'net';
 import { dirname, join, resolve } from 'path';
+import { homedir } from 'os';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -19,6 +20,12 @@ const POST_DIR = join(__dirname, '..', '..', 'post-processing');
 // Use the same Node binary that is running this script so post-processing
 // scripts work even when Chrome's PATH doesn't include node.
 const NODE = process.execPath;
+
+// Debug log — written to ~/umpire-coder-debug.log so crashes are visible.
+const LOG = join(homedir(), 'umpire-coder-debug.log');
+function dbg(msg) {
+  try { appendFileSync(LOG, new Date().toISOString() + '  ' + msg + '\n'); } catch {}
+}
 
 function slugPart(str) {
   return (str || '').trim().replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '');
@@ -133,19 +140,26 @@ async function launchObs(port, customPath) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
+  dbg('host started, node=' + NODE);
+
   let msg;
   try {
     msg = await readMessage();
   } catch (err) {
+    dbg('readMessage failed: ' + err.message);
     sendMessage({ success: false, error: 'Failed to read message: ' + err.message });
     process.exit(1);
   }
 
+  dbg('received message type=' + (msg.type || '(none)'));
+
   if (msg.type === 'LAUNCH_OBS') {
     try {
       await launchObs(msg.obsPort || 4455, msg.obsExePath || '');
+      dbg('LAUNCH_OBS success');
       sendMessage({ success: true });
     } catch (err) {
+      dbg('LAUNCH_OBS error: ' + err.message);
       sendMessage({ success: false, error: err.message });
     }
     return;
@@ -237,6 +251,7 @@ async function main() {
 }
 
 main().catch(err => {
+  dbg('unhandled error: ' + err.message);
   sendMessage({ success: false, error: err.message });
   process.exit(1);
 });
