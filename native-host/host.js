@@ -209,6 +209,21 @@ async function main() {
     return;
   }
 
+  if (msg.type === 'OPEN_FOLDER') {
+    try {
+      const target = msg.path || '.';
+      if (process.platform === 'win32') {
+        spawn('explorer.exe', [target], { detached: true, stdio: 'ignore' }).unref();
+      } else {
+        spawn('open', [target], { detached: true, stdio: 'ignore' }).unref();
+      }
+      sendMessage({ success: true });
+    } catch (err) {
+      sendMessage({ success: false, error: err.message });
+    }
+    return;
+  }
+
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
 
   const baseDir = clipOutputDir || join(

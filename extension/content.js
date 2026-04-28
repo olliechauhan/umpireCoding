@@ -324,17 +324,19 @@
       statusHTML = `<p class="post-status error">Processing error: ${esc(pr.error || 'unknown')}</p>`;
     } else {
       const rows = (pr.results || []).map(r => {
+        if (r.type === 'cleanup' && r.success) return ''; // silent on success
         const icon  = r.success ? '✓' : '✗';
-        const label = r.type === 'report' ? 'PDF report' : 'Clips';
-        const msg   = r.success ? (r.message || 'done') : (r.error || 'failed');
-        return `<div class="result-row ${r.success ? 'ok' : 'fail'}">${icon} ${label} — ${esc(msg)}</div>`;
+        const label = r.type === 'report' ? 'PDF report generated'
+                    : r.type === 'clips'   ? 'Clips recorded'
+                    : r.type === 'cleanup' ? 'Original recording deleted'
+                    : r.type;
+        const extra = r.success ? '' : ` — ${esc(r.error || 'failed')}`;
+        return `<div class="result-row ${r.success ? 'ok' : 'fail'}">${icon} ${label}${extra}</div>`;
       }).join('');
-      const outDir = esc(pr.outDir || result.clipOutputDir || '');
+      const outDir = pr.outDir || result.clipOutputDir || '';
       statusHTML = `
         ${rows}
-        ${outDir ? `<div class="post-label" style="margin-top:10px">Output folder</div>
-        <div class="cmd-block">${outDir}</div>
-        <button class="copy-btn" data-copy="${outDir}">Copy path</button>` : ''}
+        ${outDir ? `<button class="open-folder-btn" data-dir="${esc(outDir)}">📂 Open folder</button>` : ''}
       `;
     }
 
@@ -344,14 +346,12 @@
       <button class="close-overlay-btn" id="close-overlay-btn">Close</button>
     `;
 
-    body.querySelectorAll('.copy-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        navigator.clipboard.writeText(btn.dataset.copy).catch(() => {});
-        const orig = btn.textContent;
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = orig; }, 1800);
+    const openBtn = body.querySelector('.open-folder-btn');
+    if (openBtn) {
+      openBtn.addEventListener('click', () => {
+        sendMsg({ type: 'OPEN_FOLDER', path: openBtn.dataset.dir }).catch(() => {});
       });
-    });
+    }
 
     body.querySelector('#close-overlay-btn').addEventListener('click', () => host.remove());
   }
@@ -883,10 +883,11 @@
       margin-bottom: 5px;
     }
 
-    .copy-btn {
+    .open-folder-btn {
       display: block;
       width: 100%;
-      padding: 6px;
+      margin-top: 10px;
+      padding: 7px;
       background: rgba(79,124,255,0.1);
       border: 1px solid rgba(79,124,255,0.3);
       border-radius: 5px;
@@ -897,7 +898,7 @@
       font-family: inherit;
       transition: background 0.15s;
     }
-    .copy-btn:hover { background: rgba(79,124,255,0.25); }
+    .open-folder-btn:hover { background: rgba(79,124,255,0.25); }
 
     .post-status {
       font-size: 11px;

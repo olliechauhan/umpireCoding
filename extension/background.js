@@ -241,6 +241,15 @@ async function handle(message) {
       }
     }
 
+    case 'OPEN_FOLDER': {
+      try {
+        await sendNativeMessage('com.umpirecoder.postprocess', message);
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+      return { success: true };
+    }
+
     case 'OPEN_SETTINGS': {
       await chrome.tabs.create({
         url: chrome.runtime.getURL('settings/settings.html'),
