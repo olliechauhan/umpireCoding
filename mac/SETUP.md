@@ -54,7 +54,13 @@ git --version
 ```
 
 3. If you see a version number (e.g. `git version 2.39.0`), you already have Git — skip to Step 1d.
-4. If you see a popup asking to install Command Line Developer Tools, click **Install** and wait for it to finish.
+4. If you do not have Git, run this command in Terminal and wait for it to finish:
+
+```
+xcode-select --install
+```
+
+   A window will appear asking you to install Command Line Developer Tools — click **Install**. When it finishes, run `git --version` again to confirm it worked.
 
 ### 1d. OBS Studio
 
@@ -248,6 +254,11 @@ Here is the workflow for each match:
 ---
 
 ## Troubleshooting
+
+**"Can't install the software because it is currently not available in the software update server"**
+- This happens when macOS tries to install Command Line Developer Tools through the popup and the Apple server is unavailable.
+- Fix: close the popup, open Terminal, and run `xcode-select --install` instead. A fresh install window will appear — click **Install** and wait for it to finish.
+- If that also fails, restart your Mac and try again, or connect to a different network.
 
 **"OBS connection refused" error when testing**
 - Make sure OBS is open
