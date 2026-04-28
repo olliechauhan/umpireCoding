@@ -109,6 +109,24 @@ async function handle(message) {
       return startMatchAndInjectOverlay(message.matchData);
     }
 
+    case 'ABANDON_MATCH': {
+      const { matchState: current } = await chrome.storage.local.get('matchState');
+      if (!current?.active) return { success: true };
+
+      const { settings } = await chrome.storage.local.get('settings');
+      try {
+        if (!obs.isConnected) {
+          await obs.connect(settings.obsHost, settings.obsPort, settings.obsPassword);
+        }
+        await obs.stopRecording();
+      } catch (err) {
+        console.warn('[BG] OBS stop on abandon failed:', err.message);
+      }
+
+      await chrome.storage.local.set({ matchState: { active: false } });
+      return { success: true };
+    }
+
     case 'START_MATCH_SKIP_OBS': {
       const { matchState: current } = await chrome.storage.local.get('matchState');
       if (current?.active) return { error: 'A match is already in progress.' };

@@ -7,7 +7,7 @@
  */
 
 import { execFileSync, spawn } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import net from 'net';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -237,6 +237,7 @@ async function main() {
         { cwd: POST_DIR, encoding: 'utf8', timeout: 600_000 }
       );
       results.push({ type: 'clips', success: true, message: out.trim() });
+      try { unlinkSync(videoPath); } catch { /* non-fatal */ }
     } catch (err) {
       const detail = err.stderr ? err.stderr.toString().trim().split('\n').pop() : err.message;
       results.push({ type: 'clips', success: false, error: detail });

@@ -41,6 +41,12 @@ function sanitiseFilename(str) {
     .substring(0, 60);
 }
 
+function clipsFolder(meta) {
+  const date = (meta.date || 'unknown-date').replace(/\//g, '-');
+  const comp = sanitiseFilename(meta.competition || 'match');
+  return `${date}_${comp}_clips`;
+}
+
 function reportFilename(meta) {
   const date = (meta.date || 'unknown-date').replace(/\//g, '-');
   const comp = sanitiseFilename(meta.competition || 'match');
@@ -237,9 +243,10 @@ function main() {
   const events = raw.events || [];
 
   const baseDir  = outDir ? resolve(outDir) : resolve(jsonPath, '..');
-  mkdirSync(baseDir, { recursive: true });
+  const clipsDir = join(baseDir, clipsFolder(meta));
+  mkdirSync(clipsDir, { recursive: true });
 
-  const pdfPath = join(baseDir, reportFilename(meta));
+  const pdfPath = join(clipsDir, reportFilename(meta));
   const doc     = new PDFDocument({ autoFirstPage: true, size: 'A4', margin: MARGIN });
   const stream  = createWriteStream(pdfPath);
 

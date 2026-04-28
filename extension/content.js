@@ -29,7 +29,6 @@
   let selectedUmpire  = null;   // 'umpire1' | 'umpire2' | null
   let selectedTag     = null;   // tag string | null
   let timerInterval   = null;
-  let confirmingEnd   = false;
   let streamDelaySecs = 0;      // subtracted from live timer when logging
 
   // ── Boot ────────────────────────────────────────────────────────────────────
@@ -110,10 +109,19 @@
           <button class="end-btn" id="end-btn">End Match</button>
         </div>
 
-        <div class="confirm-row hidden" id="confirm-row">
-          <span class="confirm-label">Stop recording &amp; save log?</span>
-          <button class="confirm-yes" id="confirm-yes">Confirm</button>
-          <button class="confirm-no" id="confirm-no">Cancel</button>
+        <div class="confirm-row hidden" id="end-choice">
+          <span class="confirm-label">End match?</span>
+          <div class="end-choice-btns">
+            <button class="confirm-yes" id="save-match-btn">Save &amp; process</button>
+            <button class="abandon-btn" id="abandon-match-btn">Abandon</button>
+          </div>
+          <button class="confirm-no" id="end-cancel-btn">Cancel</button>
+        </div>
+
+        <div class="confirm-row hidden" id="abandon-confirm">
+          <span class="confirm-label abandon-warn">Discard all timestamps? This cannot be undone.</span>
+          <button class="abandon-btn" id="abandon-yes-btn">Yes, abandon</button>
+          <button class="confirm-no" id="abandon-back-btn">Go back</button>
         </div>
       </div>
 
@@ -185,20 +193,31 @@
     // Log event
     q('#log-btn').addEventListener('click', logEvent);
 
-    // End match — two-step confirm inside the panel
+    // End match — step 1: save or abandon
     q('#end-btn').addEventListener('click', () => {
-      confirmingEnd = true;
-      q('#confirm-row').classList.remove('hidden');
+      q('#end-choice').classList.remove('hidden');
       q('#end-btn').disabled = true;
     });
 
-    q('#confirm-yes').addEventListener('click', endMatch);
-
-    q('#confirm-no').addEventListener('click', () => {
-      confirmingEnd = false;
-      q('#confirm-row').classList.add('hidden');
+    q('#end-cancel-btn').addEventListener('click', () => {
+      q('#end-choice').classList.add('hidden');
       q('#end-btn').disabled = false;
     });
+
+    q('#save-match-btn').addEventListener('click', endMatch);
+
+    // Abandon — step 2: secondary confirmation
+    q('#abandon-match-btn').addEventListener('click', () => {
+      q('#end-choice').classList.add('hidden');
+      q('#abandon-confirm').classList.remove('hidden');
+    });
+
+    q('#abandon-back-btn').addEventListener('click', () => {
+      q('#abandon-confirm').classList.add('hidden');
+      q('#end-choice').classList.remove('hidden');
+    });
+
+    q('#abandon-yes-btn').addEventListener('click', abandonMatch);
   }
 
   // ── Actions ─────────────────────────────────────────────────────────────────
@@ -241,23 +260,39 @@
   }
 
   async function endMatch() {
-    const yesBtn = q('#confirm-yes');
-    yesBtn.disabled = true;
-    yesBtn.textContent = 'Stopping…';
+    const saveBtn = q('#save-match-btn');
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Stopping…';
 
     const result = await sendMsg({ type: 'END_MATCH' });
     if (result.error) {
       flash('Error: ' + result.error, 'error');
-      yesBtn.disabled = false;
-      yesBtn.textContent = 'Confirm';
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save & process';
       q('#end-btn').disabled = false;
-      q('#confirm-row').classList.add('hidden');
-      confirmingEnd = false;
+      q('#end-choice').classList.add('hidden');
       return;
     }
 
     clearInterval(timerInterval);
     showPostMatchScreen(result);
+  }
+
+  async function abandonMatch() {
+    const btn = q('#abandon-yes-btn');
+    btn.disabled = true;
+    btn.textContent = 'Abandoning…';
+
+    const result = await sendMsg({ type: 'ABANDON_MATCH' });
+    if (result.error) {
+      flash('Error: ' + result.error, 'error');
+      btn.disabled = false;
+      btn.textContent = 'Yes, abandon';
+      return;
+    }
+
+    clearInterval(timerInterval);
+    host.remove();
   }
 
   function showPostMatchScreen(result) {
@@ -709,7 +744,7 @@
 
     .confirm-row {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 6px;
       margin-top: 8px;
       padding: 8px 10px;
@@ -719,11 +754,18 @@
     }
     .confirm-row.hidden { display: none; }
 
-    .confirm-label { font-size: 11px; color: #e94560; flex: 1; line-height: 1.3; }
+    .confirm-label { font-size: 11px; color: #e94560; line-height: 1.3; }
+    .abandon-warn  { color: #ffa040; }
+
+    .end-choice-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+    }
 
     .confirm-yes {
       padding: 5px 10px;
-      background: #e94560;
+      background: #2dce89;
       border: none;
       border-radius: 5px;
       color: #fff;
@@ -735,6 +777,20 @@
     }
     .confirm-yes:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    .abandon-btn {
+      padding: 5px 10px;
+      background: #e94560;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+    .abandon-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
     .confirm-no {
       padding: 5px 10px;
       background: transparent;
@@ -744,6 +800,7 @@
       font-size: 11px;
       cursor: pointer;
       font-family: inherit;
+      align-self: flex-start;
     }
     .confirm-no:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
