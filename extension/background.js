@@ -77,26 +77,6 @@ async function handle(message) {
       if (current?.active) return { error: 'A match is already in progress.' };
 
       const { settings } = await chrome.storage.local.get('settings');
-
-      // Launch OBS via the native host — fatal if it fails so the popup can
-      // present the error and offer retry / skip / cancel.
-      try {
-        await sendNativeMessage('com.umpirecoder.postprocess', {
-          type: 'LAUNCH_OBS',
-          obsPort: settings.obsPort,
-          obsExePath: settings.obsExePath || '',
-        });
-      } catch (err) {
-        const notInstalled = /not found|not registered/i.test(err.message);
-        return {
-          obsError: true,
-          errorMessage: notInstalled
-            ? 'The Umpire Coder helper does not appear to be set up on this computer. Please run the setup script and try again.'
-            : `OBS could not be opened: ${err.message}`,
-        };
-      }
-
-      // Get the active tab before connecting so we can point OBS at it.
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
       try {
@@ -106,7 +86,7 @@ async function handle(message) {
       } catch (err) {
         return {
           obsError: true,
-          errorMessage: `OBS opened but could not start recording: ${err.message}`,
+          errorMessage: `Could not connect to OBS — is it open with the WebSocket server enabled? (${err.message})`,
         };
       }
 

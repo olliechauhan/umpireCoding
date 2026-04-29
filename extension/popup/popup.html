@@ -53,26 +53,9 @@
           <input type="text" id="venue" placeholder="e.g. Example Arena" autocomplete="off">
         </div>
         <div id="error-msg" class="error" hidden></div>
+        <button type="button" id="skip-video-btn" class="outline-btn" hidden>Continue without video</button>
         <button type="submit" id="start-btn">▶ Start Match</button>
       </form>
-    </section>
-
-    <!-- OBS launch progress (shown while waiting for OBS to open) -->
-    <section id="loading-screen" hidden>
-      <div class="loading-body">
-        <div class="spinner"></div>
-        <p id="loading-msg">Opening OBS…</p>
-        <p class="loading-sub">This may take up to 20 seconds</p>
-      </div>
-    </section>
-
-    <!-- OBS error (shown when OBS cannot be opened or started) -->
-    <section id="obs-error-screen" hidden>
-      <div class="obs-error-icon">⚠</div>
-      <p id="obs-error-msg" class="obs-error-detail"></p>
-      <button id="retry-btn">↺ Retry</button>
-      <button id="skip-video-btn" class="outline-btn">Continue without video</button>
-      <button id="cancel-start-btn" class="danger-btn">Cancel</button>
     </section>
 
     <!-- Active match indicator (shown when a match is already running) -->

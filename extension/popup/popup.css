@@ -198,86 +198,12 @@ input[type='date']::-webkit-calendar-picker-indicator {
   margin-top: 10px;
 }
 
-/* ── Loading screen ── */
-
-#loading-screen {
-  text-align: center;
-  padding: 24px 0 8px;
-}
-
-.loading-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-#loading-msg {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.loading-sub {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* ── OBS error screen ── */
-
-#obs-error-screen {
-  text-align: center;
-  padding: 8px 0;
-}
-
-.obs-error-icon {
-  font-size: 28px;
-  color: #f0a500;
-  margin-bottom: 10px;
-}
-
-.obs-error-detail {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-bottom: 16px;
-  line-height: 1.5;
-}
-
-#retry-btn {
-  display: block;
-  width: 100%;
-  padding: 9px;
-  background: var(--primary);
-  border: none;
-  border-radius: var(--radius);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-  margin-bottom: 8px;
-}
-
-#retry-btn:hover {
-  background: var(--primary-hover);
-}
+/* ── Continue without video button ── */
 
 .outline-btn {
   display: block;
   width: 100%;
+  margin-top: 8px;
   padding: 9px;
   background: transparent;
   border: 1px solid var(--primary);
@@ -286,8 +212,8 @@ input[type='date']::-webkit-calendar-picker-indicator {
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
+  font-family: inherit;
   transition: background 0.15s, color 0.15s;
-  margin-bottom: 8px;
 }
 
 .outline-btn:hover {

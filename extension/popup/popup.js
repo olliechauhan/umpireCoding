@@ -28,24 +28,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
 
-    await attemptStart(matchData);
+    await startMatch(matchData);
   });
 });
 
 // ── Start flow ────────────────────────────────────────────────────────────────
 
-async function attemptStart(matchData) {
+async function startMatch(matchData) {
   hideError();
-  showScreen('loading-screen');
+  document.getElementById('skip-video-btn').hidden = true;
+
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true;
+  btn.textContent = 'Starting…';
 
   const result = await msg({ type: 'START_MATCH', matchData });
 
+  btn.disabled = false;
+  btn.textContent = '▶ Start Match';
+
   if (result.obsError) {
-    showObsError(result.errorMessage, matchData);
+    showError(result.errorMessage);
+    const skipBtn = document.getElementById('skip-video-btn');
+    skipBtn.hidden = false;
+    skipBtn.onclick = () => startMatchSkipObs(matchData);
     return;
   }
+
   if (result.error) {
-    showScreen('setup-screen');
     showError(result.error);
     return;
   }
@@ -53,37 +63,30 @@ async function attemptStart(matchData) {
   window.close();
 }
 
-function showObsError(errorMessage, matchData) {
-  document.getElementById('obs-error-msg').textContent = errorMessage;
-  showScreen('obs-error-screen');
+async function startMatchSkipObs(matchData) {
+  hideError();
+  document.getElementById('skip-video-btn').hidden = true;
 
-  document.getElementById('retry-btn').onclick = () => attemptStart(matchData);
+  const btn = document.getElementById('start-btn');
+  btn.disabled = true;
+  btn.textContent = 'Starting…';
 
-  document.getElementById('skip-video-btn').onclick = async () => {
-    showScreen('loading-screen');
-    document.getElementById('loading-msg').textContent = 'Starting without video…';
-    const result = await msg({ type: 'START_MATCH_SKIP_OBS', matchData });
-    if (result.error) {
-      showScreen('setup-screen');
-      showError(result.error);
-    } else {
-      window.close();
-    }
-  };
+  const result = await msg({ type: 'START_MATCH_SKIP_OBS', matchData });
 
-  document.getElementById('cancel-start-btn').onclick = () => {
-    showScreen('setup-screen');
-  };
-}
+  btn.disabled = false;
+  btn.textContent = '▶ Start Match';
 
-function showScreen(id) {
-  for (const s of ['setup-screen', 'loading-screen', 'obs-error-screen', 'active-screen']) {
-    document.getElementById(s).hidden = s !== id;
+  if (result.error) {
+    showError(result.error);
+    return;
   }
+
+  window.close();
 }
 
 function showActiveScreen(matchState) {
-  showScreen('active-screen');
+  document.getElementById('setup-screen').hidden = true;
+  document.getElementById('active-screen').hidden = false;
 
   const m = matchState.matchData;
   const teams = (m.team1 && m.team2) ? `${m.team1} v ${m.team2}\n` : '';
