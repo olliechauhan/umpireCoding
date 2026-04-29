@@ -21,8 +21,8 @@ const POST_DIR = join(__dirname, '..', '..', 'post-processing');
 // scripts work even when Chrome's PATH doesn't include node.
 const NODE = process.execPath;
 
-// Debug log — stderr (visible in terminal) + file fallback.
-const LOG = join(homedir(), 'umpire-coder-debug.log');
+// Debug log — written next to host.js so it's always writable.
+const LOG = join(__dirname, 'debug.log');
 function dbg(msg) {
   const line = new Date().toISOString() + '  ' + msg + '\n';
   process.stderr.write(line);
