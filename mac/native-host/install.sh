@@ -55,12 +55,6 @@ fi
 echo ""
 echo "Step 3/3  Registering native messaging host..."
 
-# Write host.sh with the absolute node path so Chrome can launch it
-# without inheriting the user's shell PATH.
-cat > "$HOST_SH" <<SCRIPT
-#!/bin/bash
-exec "$NODE_PATH" "\$(dirname "\$0")/host.js"
-SCRIPT
 chmod +x "$HOST_SH"
 
 cat > "$MANIFEST_PATH" <<EOF
