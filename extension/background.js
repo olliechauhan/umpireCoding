@@ -337,15 +337,28 @@ function getVideoCrop() {
     v.offsetWidth * v.offsetHeight > best.offsetWidth * best.offsetHeight ? v : best
   );
 
-  const rect = video.getBoundingClientRect();
-  const dpr  = window.devicePixelRatio || 1;
-  const topChrome = window.outerHeight - window.innerHeight; // tabs bar + address bar in CSS px
+  // Walk up from the <video> to find the player container — the element that
+  // wraps both the video and any HTML overlays (scoreboards, controls, etc.).
+  // Stop as soon as the ancestor grows by more than 200 CSS px in either
+  // dimension; anything larger is a page layout wrapper, not the player.
+  const vRect = video.getBoundingClientRect();
+  let playerRect = vRect;
+  let el = video.parentElement;
+  while (el && el !== document.documentElement) {
+    const r = el.getBoundingClientRect();
+    if (r.width > vRect.width + 200 || r.height > vRect.height + 200) break;
+    playerRect = r;
+    el = el.parentElement;
+  }
+
+  const dpr = window.devicePixelRatio || 1;
+  const topChrome = window.outerHeight - window.innerHeight;
 
   return {
-    cropLeft:   Math.round(rect.left * dpr),
-    cropTop:    Math.round((topChrome + rect.top) * dpr),
-    cropRight:  Math.round((window.outerWidth - rect.right) * dpr),
-    cropBottom: Math.round((window.outerHeight - rect.bottom) * dpr),
+    cropLeft:   Math.round(playerRect.left * dpr),
+    cropTop:    Math.round((topChrome + playerRect.top) * dpr),
+    cropRight:  Math.round((window.outerWidth - playerRect.right) * dpr),
+    cropBottom: Math.round((window.outerHeight - playerRect.bottom) * dpr),
   };
 }
 
