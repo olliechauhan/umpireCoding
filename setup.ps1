@@ -40,10 +40,7 @@ function Install-Winget {
         Reload-Path
         Write-OK "$Name installed."
     } elseif ($code -eq 6) {
-        Write-Host ""
-        Write-Host "  ERROR: $Name could not install because it is currently open." -ForegroundColor Red
-        Write-Host "  Close $Name, then re-run this setup script." -ForegroundColor Red
-        exit 1
+        Write-Skip "$Name already installed (currently running, skipping upgrade)."
     } else {
         Write-Host ""
         Write-Host "  WARNING: $Name installer exited with code $code." -ForegroundColor Yellow
