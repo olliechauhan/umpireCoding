@@ -204,15 +204,32 @@ export class OBSWebSocket {
   async cropWindowCapture(cropLeft, cropTop, cropRight, cropBottom) {
     try {
       const { currentProgramSceneName } = await this._call('GetCurrentProgramScene');
-      const { sceneItems = [] } = await this._call('GetSceneItemList', {
-        sceneName: currentProgramSceneName,
-      });
+      const [{ sceneItems = [] }, { baseWidth, baseHeight }] = await Promise.all([
+        this._call('GetSceneItemList', { sceneName: currentProgramSceneName }),
+        this._call('GetVideoSettings'),
+      ]);
+
       for (const item of sceneItems) {
         if (!item.inputKind?.includes('window_capture')) continue;
         await this._call('SetSceneItemTransform', {
           sceneName: currentProgramSceneName,
           sceneItemId: item.sceneItemId,
-          sceneItemTransform: { cropLeft, cropTop, cropRight, cropBottom },
+          sceneItemTransform: {
+            // Crop to the video player area.
+            cropLeft,
+            cropTop,
+            cropRight,
+            cropBottom,
+            // Scale the cropped source to fill the canvas, maintaining aspect ratio.
+            // OBS_BOUNDS_SCALE_INNER scales up as large as possible without distortion.
+            positionX:      0,
+            positionY:      0,
+            alignment:      5, // OBS_ALIGN_LEFT | OBS_ALIGN_TOP
+            boundsType:     'OBS_BOUNDS_SCALE_INNER',
+            boundsAlignment: 0, // centre within bounds
+            boundsWidth:    baseWidth,
+            boundsHeight:   baseHeight,
+          },
         });
       }
     } catch (err) {
