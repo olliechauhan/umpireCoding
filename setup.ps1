@@ -79,7 +79,7 @@ function Set-IniValue {
 Clear-Host
 Write-Host ""
 Write-Host "  ============================================" -ForegroundColor Cyan
-Write-Host "    Umpire Coder — Automated Setup" -ForegroundColor Cyan
+Write-Host "    Umpire Coder - Automated Setup" -ForegroundColor Cyan
 Write-Host "  ============================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  This will install all required software and configure"
@@ -88,24 +88,24 @@ Write-Host ""
 Write-Host "  Press Enter to begin, or Ctrl+C to cancel." -NoNewline
 Read-Host
 
-# ── Step 1: Node.js ──────────────────────────────────────────────────────────
+# -- Step 1: Node.js ----------------------------------------------------------
 Write-Step "1/8" "Node.js (LTS)"
 Install-Winget "OpenJS.NodeJS.LTS" "Node.js"
 
-# ── Step 2: Git ──────────────────────────────────────────────────────────────
+# -- Step 2: Git --------------------------------------------------------------
 Write-Step "2/8" "Git"
 Install-Winget "Git.Git" "Git"
 
-# ── Step 3: OBS Studio ───────────────────────────────────────────────────────
+# -- Step 3: OBS Studio -------------------------------------------------------
 Write-Step "3/8" "OBS Studio"
 Install-Winget "OBSProject.OBSStudio" "OBS Studio"
 
-# ── Step 4: ffmpeg ───────────────────────────────────────────────────────────
+# -- Step 4: ffmpeg -----------------------------------------------------------
 Write-Step "4/8" "ffmpeg"
 Install-Winget "Gyan.FFmpeg" "ffmpeg"
 Reload-Path
 
-# ── Step 5: Clone / update repo ──────────────────────────────────────────────
+# -- Step 5: Clone / update repo ----------------------------------------------
 Write-Step "5/8" "Umpire Coder files"
 if (Test-Path (Join-Path $INSTALL_DIR ".git")) {
     Write-Info "Repository already exists at $INSTALL_DIR"
@@ -120,14 +120,14 @@ if (Test-Path (Join-Path $INSTALL_DIR ".git")) {
     Write-OK "Files downloaded."
 }
 
-# ── Step 6: npm install ──────────────────────────────────────────────────────
+# -- Step 6: npm install ------------------------------------------------------
 Write-Step "6/8" "Post-processing dependencies (pdfkit)"
 Push-Location (Join-Path $INSTALL_DIR "post-processing")
 npm install --silent
 Pop-Location
 Write-OK "Dependencies installed."
 
-# ── Step 7: Configure OBS ────────────────────────────────────────────────────
+# -- Step 7: Configure OBS ----------------------------------------------------
 Write-Step "7/8" "Configuring OBS"
 
 $obsConfig     = Join-Path $env:APPDATA "obs-studio"
@@ -293,8 +293,8 @@ if ($chromeExe) {
 }
 
 Write-Host ""
-Write-Host "  MANUAL ACTION — Select Chrome in OBS:" -ForegroundColor White
-Write-Host "  ──────────────────────────────────────"
+Write-Host "  MANUAL ACTION - Select Chrome in OBS:" -ForegroundColor White
+Write-Host "  --------------------------------------"
 Write-Host "  1. Open OBS Studio"
 Write-Host "  2. In the Sources panel, double-click  Stream Capture"
 Write-Host "  3. Click the Window dropdown and select your Chrome window"
@@ -303,10 +303,10 @@ Write-Host "  4. Click OK, then close OBS"
 Write-Host ""
 Read-Host "  Press Enter once you've selected the Chrome window in OBS"
 
-# ── Step 8: Load extension into Chrome, then register native host ─────────────
+# -- Step 8: Load extension into Chrome, then register native host -------------
 Write-Step "8/8" "Chrome extension + native host registration"
 Write-Host ""
-Write-Host "  Chrome cannot load extensions automatically — you need to do this part." -ForegroundColor White
+Write-Host "  Chrome cannot load extensions automatically - you need to do this part." -ForegroundColor White
 Write-Host ""
 Write-Host "  We've opened Chrome and the extension folder for you." -ForegroundColor White
 Write-Host ""
@@ -330,7 +330,7 @@ Write-Host ""
 $extId = (Read-Host "  Paste Extension ID and press Enter").Trim()
 
 if ($extId.Length -ne 32) {
-    Write-Warning "Extension ID is $($extId.Length) characters — expected 32. Continuing anyway."
+    Write-Warning "Extension ID is $($extId.Length) characters - expected 32. Continuing anyway."
 }
 
 $hostDir      = Join-Path $INSTALL_DIR "native-host"
@@ -352,15 +352,15 @@ Set-ItemProperty -Path $regKey -Name "(Default)" -Value (Resolve-Path $manifestP
 
 Write-OK "Native messaging host registered."
 
-# ── Done ─────────────────────────────────────────────────────────────────────
+# -- Done ---------------------------------------------------------------------
 Write-Host ""
 Write-Host "  ============================================" -ForegroundColor Green
 Write-Host "    Setup complete!" -ForegroundColor Green
 Write-Host "  ============================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Last steps in Chrome:" -ForegroundColor White
-Write-Host "    1. Go to chrome://extensions and click the reload button (↺) on Umpire Coder"
-Write-Host "    2. Click the Umpire Coder icon → Settings and fill in:"
+Write-Host "    1. Go to chrome://extensions and click the reload button on Umpire Coder"
+Write-Host "    2. Click the Umpire Coder icon, then Settings, and fill in:"
 Write-Host "         OBS Password  :  $OBS_PASSWORD"
 Write-Host "         Recording folder  :  $recordingPath"
 Write-Host "         Clips & reports folder  :  (choose any folder you like)"
