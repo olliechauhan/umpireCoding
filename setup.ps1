@@ -160,23 +160,55 @@ Set-IniValue $globalIni "OBSWebSocket" "ServerPassword" $OBS_PASSWORD
 Set-IniValue $globalIni "OBSWebSocket" "AlertsEnabled"  "false"
 
 # Active profile + scene collection
-Set-IniValue $globalIni "Basic" "Profile"             "Umpire Coder"
-Set-IniValue $globalIni "Basic" "ProfileDir"          "Umpire Coder"
-Set-IniValue $globalIni "Basic" "SceneCollection"     "Umpire Coder"
-Set-IniValue $globalIni "Basic" "SceneCollectionFile" "Umpire Coder"
+Set-IniValue $globalIni "General" "LastVersion"       "30030000"
+Set-IniValue $globalIni "Basic"   "Profile"             "Umpire Coder"
+Set-IniValue $globalIni "Basic"   "ProfileDir"          "Umpire Coder"
+Set-IniValue $globalIni "Basic"   "SceneCollection"     "Umpire Coder"
+Set-IniValue $globalIni "Basic"   "SceneCollectionFile" "Umpire Coder"
 
 # Recording output path
 Set-IniValue $profileIni "Output"       "Mode"     "Simple"
 Set-IniValue $profileIni "SimpleOutput" "FilePath" $recordingPath
 
-# Scene collection with Stream Capture source pre-created
+# Scene collection: Stream Capture source + Mic/Aux muted
 $sceneJson = @"
 {
     "current_scene": "Match Recording",
     "current_program_scene": "Match Recording",
-    "scene_order": [{"name": "Match Recording"}],
+    "current_transition": "Fade",
+    "groups": [],
     "name": "Umpire Coder",
+    "preview_locked": false,
+    "scaling_enabled": false,
+    "scaling_level": 7,
+    "scaling_off_x": 0.0,
+    "scaling_off_y": 0.0,
+    "scene_order": [{"name": "Match Recording"}],
     "sources": [
+        {
+            "balance": 0.5,
+            "deinterlace_field_order": 0,
+            "deinterlace_mode": 0,
+            "enabled": true,
+            "flags": 0,
+            "hotkeys": {},
+            "id": "wasapi_input_capture",
+            "mixers": 255,
+            "monitoring_type": 0,
+            "muted": true,
+            "name": "Mic/Aux",
+            "prev_ver": 503316480,
+            "private_settings": {},
+            "push-to-mute-delay": 0,
+            "push-to-talk-delay": 0,
+            "settings": {
+                "device_id": "default",
+                "use_device_timing": false
+            },
+            "sync": 0,
+            "versioned_id": "wasapi_input_capture",
+            "volume": 1.0
+        },
         {
             "balance": 0.5,
             "deinterlace_field_order": 0,
@@ -249,7 +281,7 @@ $sceneJson = @"
             "volume": 1.0
         }
     ],
-    "groups": [],
+    "transition_duration": 300,
     "transitions": [
         {
             "balance": 0.5,
@@ -269,23 +301,16 @@ $sceneJson = @"
             "sync": 0,
             "volume": 1.0
         }
-    ],
-    "current_transition": "Fade",
-    "transition_duration": 300,
-    "preview_locked": false,
-    "scaling_enabled": false,
-    "scaling_level": 0,
-    "scaling_off_x": 0.0,
-    "scaling_off_y": 0.0
+    ]
 }
 "@
 [System.IO.File]::WriteAllText($sceneFile, $sceneJson, [System.Text.Encoding]::UTF8)
 
 Write-OK "WebSocket enabled  (port 4455, password: $OBS_PASSWORD)"
 Write-OK "Recording path set ($recordingPath)"
-Write-OK "Scene 'Match Recording' + Stream Capture source created"
+Write-OK "Scene 'Match Recording' created  (Stream Capture + Mic/Aux muted)"
 
-# Open Chrome minimised so it appears in OBS window capture list
+# Find Chrome and open it minimised so it appears in OBS window capture list
 $chromePaths = @(
     "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe",
     "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
@@ -298,20 +323,36 @@ if ($chromeExe) {
     Write-Info "Chrome opened in background (needed for OBS window selection)."
 } else {
     Write-Host ""
-    Write-Host "  Could not find Chrome automatically." -ForegroundColor Yellow
-    Write-Host "  Please open Chrome manually before completing the next step."
+    Write-Host "  Could not find Chrome automatically. Please open Chrome manually." -ForegroundColor Yellow
 }
+
+# Find OBS and open it with our scene collection forced via CLI argument.
+# This bypasses whatever global.ini may have saved on a previous OBS close.
+$obsPaths = @(
+    "${env:ProgramFiles}\obs-studio\bin\64bit\obs64.exe",
+    "${env:ProgramFiles(x86)}\obs-studio\bin\64bit\obs64.exe"
+)
+$obsExe = $obsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
 Write-Host ""
 Write-Host "  MANUAL ACTION - Select Chrome in OBS:" -ForegroundColor White
 Write-Host "  --------------------------------------"
-Write-Host "  1. Open OBS Studio"
-Write-Host "  2. In the Sources panel, double-click  Stream Capture"
-Write-Host "  3. Click the Window dropdown and select your Chrome window"
-Write-Host "     (it will appear as something like  [chrome.exe]: New Tab)"
-Write-Host "  4. Click OK, then close OBS"
+
+if ($obsExe) {
+    Start-Process $obsExe -ArgumentList '--collection "Umpire Coder"'
+    Write-Host "  OBS has been opened with the Umpire Coder scene collection."
+} else {
+    Write-Host "  Could not find OBS automatically - please open it manually." -ForegroundColor Yellow
+}
+
 Write-Host ""
-Read-Host "  Press Enter once you've selected the Chrome window in OBS"
+Write-Host "  In OBS:"
+Write-Host "    1. In the Sources panel, double-click  Stream Capture"
+Write-Host "    2. Click the Window dropdown and select your Chrome window"
+Write-Host "       (it will appear as something like  [chrome.exe]: New Tab)"
+Write-Host "    3. Click OK, then close OBS"
+Write-Host ""
+Read-Host "  Press Enter once you have closed OBS"
 
 # -- Step 8: Load extension into Chrome, then register native host -------------
 Write-Step "8/8" "Chrome extension + native host registration"
