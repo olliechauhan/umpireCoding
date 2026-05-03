@@ -13,71 +13,27 @@ Follow every step in order. If something goes wrong, read the **Troubleshooting*
 
 ---
 
-## Step 1 — Install the Required Software
+## Step 1 — Run the Setup Script
 
-You need to install four pieces of software. Install them in the order listed below.
-
-### 1a. Node.js
-
-Node.js is the engine that runs the post-processing scripts.
-
-1. Go to **https://nodejs.org**
-2. Click the big **"LTS"** download button (LTS = Long Term Support, the stable version)
-3. Open the downloaded file and click through the installer, accepting all defaults
-4. When finished, click **Close**
-
-### 1b. Git
-
-Git is used to download the Umpire Coder code.
-
-1. Go to **https://git-scm.com/download/win**
-2. Click the top download link (it will say something like "64-bit Git for Windows Setup")
-3. Open the downloaded file and click through the installer, accepting all defaults
-4. When finished, click **Close**
-
-### 1c. OBS Studio
-
-OBS records the livestream video during the match.
-
-1. Go to **https://obsproject.com**
-2. Click **Windows** to download
-3. Open the downloaded file and install, accepting all defaults
-
-### 1d. ffmpeg
-
-ffmpeg is the tool that cuts the video clips. It is installed via a command.
+The setup script installs all required software (Node.js, Git, OBS Studio, ffmpeg), downloads Umpire Coder, and configures everything automatically.
 
 1. Press the **Windows key**, type **PowerShell**, right-click **Windows PowerShell**, and click **Run as administrator**
-2. A blue window will open. Click inside it, paste the following command exactly, and press **Enter**:
-
-```
-winget install ffmpeg
-```
-
-3. Wait for it to finish. You will see a message like `Successfully installed`. Close the window when done.
-
----
-
-## Step 2 — Download Umpire Coder
-
-1. Press the **Windows key**, type **PowerShell**, and open **Windows PowerShell** (no need to run as administrator this time)
 2. Paste the following command and press **Enter**:
 
 ```
-cd C:\Users\%USERNAME%\Documents
+powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/olliechauhan/umpireCoding/main/setup.ps1 -OutFile $env:TEMP\umpire-setup.ps1; & $env:TEMP\umpire-setup.ps1"
 ```
 
-3. Then paste this command and press **Enter**:
+3. Press **Enter** when prompted to begin and follow the on-screen instructions
+4. When the script reaches the Chrome extension step it will open Chrome and the extension folder automatically — follow the prompts on screen
 
-```
-git clone https://github.com/olliechauhan/umpireCoding.git
-```
+> **Tip:** If you already have some of the software installed, the script will detect it and skip those steps automatically.
 
-4. Wait for it to finish. When done, you will see a new folder called **umpireCoding** inside your Documents folder.
+> **"running scripts is disabled" error?** The command above already includes the bypass. If you see this error, make sure you copied the full command exactly.
 
 ---
 
-## Step 3 — Load the Extension into Chrome
+## Step 2 — Load the Extension into Chrome
 
 1. Open **Google Chrome**
 2. In the address bar at the top, type the following and press **Enter**:
@@ -98,43 +54,17 @@ C:\Users\[YourName]\Documents\umpireCoding\extension
 
 6. Click **Select Folder**
 7. **Umpire Coder** will now appear in your extensions list
-8. **Copy the Extension ID** — it is the long string of letters underneath the extension name (looks like `abcdefghijklmnopqrstuvwxyzabcdef`). You will need this in Step 4.
+8. **Copy the Extension ID** — it is the long string of letters underneath the extension name (looks like `abcdefghijklmnopqrstuvwxyzabcdef`). Paste it into the PowerShell window when prompted.
 
-   > Tip: You can pin the extension to your toolbar by clicking the puzzle piece icon (🧩) at the top right of Chrome and clicking the pin next to Umpire Coder.
+   > Tip: You can pin the extension to your toolbar by clicking the puzzle piece icon at the top right of Chrome and clicking the pin next to Umpire Coder.
 
----
-
-## Step 4 — Run the Setup Script
-
-This script does three things automatically: installs the PDF library, links the extension to the post-processing scripts, and registers everything with Windows.
-
-1. Open **File Explorer** and navigate to:
-
-```
-C:\Users\[YourName]\Documents\umpireCoding\native-host
-```
-
-2. In the address bar of File Explorer, click once to select the path, type **PowerShell**, and press **Enter**. A PowerShell window will open already in the correct folder.
-
-3. Paste the following command and press **Enter**:
-
-```
-powershell -ExecutionPolicy Bypass -File .\install.ps1
-```
-
-   > This form of the command runs the script directly and sidesteps Windows script-blocking, so you do not need to change any settings first.
-
-4. The script will install the PDF library automatically, then ask you to paste your **Extension ID** from Step 3. Paste it in and press **Enter**.
-
-5. When you see **Done!** the setup is complete.
-
-6. Go back to Chrome, go to `chrome://extensions`, find **Umpire Coder**, and click the **circular reload arrow** (↺) to reload it.
+> **Note:** If the setup script already opened Chrome and File Explorer for you, skip steps 1–2 above — just follow steps 3–8 to load the extension and copy the ID.
 
 ---
 
-## Step 5 — Set Up OBS
+## Step 3 — Set Up OBS
 
-### 5a. Enable the WebSocket Server
+### 3a. Enable the WebSocket Server
 
 The extension controls OBS over a local connection called a WebSocket. You need to turn this on.
 
@@ -146,7 +76,7 @@ The extension controls OBS over a local connection called a WebSocket. You need 
 6. Leave the port as **4455**
 7. Click **OK**
 
-### 5b. Add a Window Capture Source
+### 3b. Add a Window Capture Source
 
 OBS needs to record the Chrome window that has the livestream playing.
 
@@ -158,7 +88,7 @@ OBS needs to record the Chrome window that has the livestream playing.
 6. Click **OK**
 7. Resize and position the capture in the preview so it fills the screen
 
-### 5c. Set the Recording Output Folder
+### 3c. Set the Recording Output Folder
 
 1. In OBS, click **File** → **Settings**
 2. Click **Output** on the left
@@ -167,7 +97,7 @@ OBS needs to record the Chrome window that has the livestream playing.
 
 ---
 
-## Step 6 — Configure the Extension Settings
+## Step 4 — Configure the Extension Settings
 
 1. Click the **Umpire Coder** icon in your Chrome toolbar (or open `chrome://extensions` and click the extension)
 2. Click the **⚙ Settings** button
@@ -176,11 +106,11 @@ OBS needs to record the Chrome window that has the livestream playing.
    **OBS Connection**
    - Host: `localhost`
    - Port: `4455`
-   - Password: the password you set in Step 5a
+   - Password: the password you set in Step 3a
    - Click **Test Connection** — you should see ✓ Connected
 
    **OBS Output Settings**
-   - Recording Output Directory: the folder from Step 5c (e.g. `C:\Users\[YourName]\Videos\umpire-recordings`)
+   - Recording Output Directory: the folder from Step 3c (e.g. `C:\Users\[YourName]\Videos\umpire-recordings`)
    - Leave format, resolution, and framerate as defaults unless you have a reason to change them
    - Click **Apply OBS Settings**
 
@@ -191,7 +121,7 @@ OBS needs to record the Chrome window that has the livestream playing.
 
 ---
 
-## Step 7 — You're Ready
+## Step 5 — You're Ready
 
 Here is the workflow for each match:
 
@@ -216,7 +146,7 @@ Here is the workflow for each match:
 2. OBS stops recording
 3. The clips and PDF report are generated automatically — this may take a minute
 4. The overlay will show ✓ green ticks when done, and display the output folder path
-5. Your files will be in the **Clips & Report Output Directory** you set in Step 6
+5. Your files will be in the **Clips & Report Output Directory** you set in Step 4
 
 ---
 
@@ -224,30 +154,23 @@ Here is the workflow for each match:
 
 **"OBS connection refused" error when testing**
 - Make sure OBS is open
-- Check that the WebSocket server is enabled (Step 5a)
+- Check that the WebSocket server is enabled (Step 3a)
 - Make sure the password matches exactly
 
 **"ffmpeg not found on PATH"**
-- Re-run the ffmpeg install command from Step 1d
+- Re-run the setup script — it will detect that ffmpeg is missing and install it
 - After it installs, fully close Chrome and reopen it
 
 **The overlay doesn't appear after starting a match**
 - Make sure the livestream tab is the active tab when you click Start Match
 - Try clicking the extension icon and clicking "Show Overlay on This Tab"
 
-**"running scripts is disabled" when running install.ps1**
-- Use the bypass form of the command instead of `.\install.ps1`:
-  ```
-  powershell -ExecutionPolicy Bypass -File .\install.ps1
-  ```
-- `Set-ExecutionPolicy RemoteSigned` alone is not enough — files downloaded via git are marked as coming from the internet and will still be blocked unless you use the bypass form above.
-
 **The extension disappeared from Chrome after restarting**
-- Extensions loaded in Developer mode stay loaded unless you remove them. If it disappeared, repeat Step 3.
+- Extensions loaded in Developer mode stay loaded unless you remove them. If it disappeared, repeat Step 2.
 
 **Clips were not cut but the PDF was generated**
-- Check that the full match video exists in your OBS recording folder (Step 5c)
-- Check that ffmpeg is installed (Step 1d)
+- Check that the full match video exists in your OBS recording folder (Step 3c)
+- Check that ffmpeg is installed — re-run the setup script to verify
 - The PDF report is always generated regardless of whether clips are cut
 
 ---

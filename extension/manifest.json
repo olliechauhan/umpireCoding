@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Umpire Coder",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Hockey match official performance analysis — tagging overlay with OBS recording control.",
   "permissions": [
     "storage",
