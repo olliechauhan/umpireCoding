@@ -28,14 +28,26 @@ function Reload-Path {
 
 function Install-Winget {
     param($Id, $Name)
-    $result = winget list --id $Id --accept-source-agreements 2>&1 | Out-String
-    if ($result -match [regex]::Escape($Id)) {
+    $listResult = winget list --id $Id --accept-source-agreements 2>&1 | Out-String
+    if ($listResult -match [regex]::Escape($Id)) {
         Write-Skip "$Name already installed."
-    } else {
-        Write-Info "Installing $Name..."
-        winget install --id $Id --accept-package-agreements --accept-source-agreements --silent
+        return
+    }
+    Write-Info "Installing $Name..."
+    winget install --id $Id --accept-package-agreements --accept-source-agreements --silent
+    $code = $LASTEXITCODE
+    if ($code -eq 0) {
         Reload-Path
         Write-OK "$Name installed."
+    } elseif ($code -eq 6) {
+        Write-Host ""
+        Write-Host "  ERROR: $Name could not install because it is currently open." -ForegroundColor Red
+        Write-Host "  Close $Name, then re-run this setup script." -ForegroundColor Red
+        exit 1
+    } else {
+        Write-Host ""
+        Write-Host "  WARNING: $Name installer exited with code $code." -ForegroundColor Yellow
+        Write-Host "  If $Name is not working, install it manually from its website then re-run." -ForegroundColor Yellow
     }
 }
 
