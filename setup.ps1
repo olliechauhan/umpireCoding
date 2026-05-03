@@ -339,7 +339,7 @@ $obsPaths = @(
 $obsExe = $obsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
 if ($obsExe) {
-    Start-Process $obsExe -ArgumentList '--collection "Umpire Coder"'
+    Start-Process $obsExe -ArgumentList '--collection "Umpire Coder"' -WorkingDirectory (Split-Path $obsExe)
     Write-Info "OBS opened with the Umpire Coder scene collection."
 } else {
     Write-Host "  Could not find OBS automatically - please open it manually." -ForegroundColor Yellow
