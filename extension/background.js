@@ -86,6 +86,30 @@ async function handle(message) {
       if (current?.active) return { error: 'A match is already in progress.' };
 
       const { settings } = await chrome.storage.local.get('settings');
+
+      // Launch OBS (or confirm it's already running) via the native host.
+      // waitForPort inside the host blocks until the WebSocket is ready, so
+      // a successful response means OBS is definitely ready to accept connections.
+      try {
+        const launchResult = await sendNativeMessage('com.umpirecoder.postprocess', {
+          type: 'LAUNCH_OBS',
+          obsPort:    settings.obsPort    || 4455,
+          obsExePath: settings.obsExePath || '',
+        });
+        if (!launchResult.success) {
+          return { obsError: true, canRetry: true, errorMessage: launchResult.error || 'OBS failed to start.' };
+        }
+      } catch (err) {
+        const notInstalled = /not found|not registered/i.test(err.message);
+        return {
+          obsError: true,
+          canRetry: false,
+          errorMessage: notInstalled
+            ? 'The Umpire Coder helper is not set up on this computer. Run install.ps1 in the native-host folder, then try again.'
+            : `Could not launch OBS: ${err.message}`,
+        };
+      }
+
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
       let crop = null;
@@ -111,7 +135,8 @@ async function handle(message) {
       } catch (err) {
         return {
           obsError: true,
-          errorMessage: `Could not connect to OBS — is it open with the WebSocket server enabled? (${err.message})`,
+          canRetry: true,
+          errorMessage: `OBS opened but could not connect to its WebSocket server. Check that the WebSocket server is enabled in OBS → Tools → WebSocket Server Settings. (${err.message})`,
         };
       }
 

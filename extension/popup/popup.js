@@ -36,11 +36,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function startMatch(matchData) {
   hideError();
+  document.getElementById('retry-btn').hidden = true;
   document.getElementById('skip-video-btn').hidden = true;
 
   const btn = document.getElementById('start-btn');
   btn.disabled = true;
-  btn.textContent = 'Starting…';
+  btn.textContent = 'Launching OBS…';
 
   const result = await msg({ type: 'START_MATCH', matchData });
 
@@ -49,6 +50,11 @@ async function startMatch(matchData) {
 
   if (result.obsError) {
     showError(result.errorMessage);
+    if (result.canRetry) {
+      const retryBtn = document.getElementById('retry-btn');
+      retryBtn.hidden = false;
+      retryBtn.onclick = () => startMatch(matchData);
+    }
     const skipBtn = document.getElementById('skip-video-btn');
     skipBtn.hidden = false;
     skipBtn.onclick = () => startMatchSkipObs(matchData);
