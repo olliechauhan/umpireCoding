@@ -2,6 +2,14 @@ import { OBSWebSocket } from './obs/websocket.js';
 
 const obs = new OBSWebSocket();
 
+// Track the overlay popup window so REINJECT_OVERLAY can focus rather than re-open.
+// Module-level — resets if the service worker is restarted, which is acceptable.
+let overlayWindowId = null;
+
+chrome.windows.onRemoved.addListener((windowId) => {
+  if (windowId === overlayWindowId) overlayWindowId = null;
+});
+
 const DEFAULT_TAG_TYPES = [
   'Positioning',
   'Overheads',
@@ -90,7 +98,7 @@ async function handle(message) {
         };
       }
 
-      return startMatchAndInjectOverlay(message.matchData, activeTab);
+      return startMatchAndInjectOverlay(message.matchData);
     }
 
     case 'ABANDON_MATCH': {
@@ -118,15 +126,13 @@ async function handle(message) {
     }
 
     case 'REINJECT_OVERLAY': {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab) {
-        // Try messaging first — content script may already be live
+      if (overlayWindowId !== null) {
         try {
-          await chrome.tabs.sendMessage(tab.id, { type: 'SHOW_OVERLAY' });
-        } catch {
-          await injectOverlay(tab.id);
-        }
+          await chrome.windows.update(overlayWindowId, { focused: true });
+          return { success: true };
+        } catch { /* window was closed, fall through to open a new one */ }
       }
+      await openOverlayWindow();
       return { success: true };
     }
 
@@ -244,7 +250,7 @@ async function handle(message) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-async function startMatchAndInjectOverlay(matchData, tab) {
+async function startMatchAndInjectOverlay(matchData) {
   const startTime = Date.now();
   const matchState = {
     active: true,
@@ -254,20 +260,20 @@ async function startMatchAndInjectOverlay(matchData, tab) {
     nextEventId: 1,
   };
   await chrome.storage.local.set({ matchState });
-  const activeTab = tab ?? (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
-  if (activeTab) await injectOverlay(activeTab.id);
+  await openOverlayWindow();
   return { success: true, startTime };
 }
 
-async function injectOverlay(tabId) {
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId },
-      files: ['content.js'],
-    });
-  } catch (err) {
-    console.error('[BG] Overlay injection failed:', err.message);
-  }
+async function openOverlayWindow() {
+  const win = await chrome.windows.create({
+    url:    chrome.runtime.getURL('overlay/overlay.html'),
+    type:   'popup',
+    width:  320,
+    height: 620,
+    left:   20,
+    top:    20,
+  });
+  overlayWindowId = win.id;
 }
 
 function slugPart(str) {
