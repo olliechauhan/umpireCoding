@@ -7,15 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ── Populate form from stored settings ────────────────────────────────────────
 
 function populate(s) {
-  set('obs-host',       s.obsHost       ?? 'localhost');
-  set('obs-port',       s.obsPort       ?? 4455);
-  set('obs-password',   s.obsPassword   ?? '');
-  set('obs-exe-path',   s.obsExePath    ?? '');
-  set('obs-output-dir', s.outputDirectory      ?? '');
-  set('obs-format',     s.obsOutputFormat      ?? 'mp4');
-  set('obs-resolution', s.obsResolution        ?? '1920x1080');
-  set('obs-framerate',  String(s.obsFramerate  ?? 30));
-  set('clip-output-dir', s.clipOutputDirectory ?? '');
+  set('obs-host',      s.obsHost      ?? 'localhost');
+  set('obs-port',      s.obsPort      ?? 4455);
+  set('obs-password',  s.obsPassword  ?? '');
+  set('obs-exe-path',  s.obsExePath   ?? '');
+  set('output-dir',    s.outputDirectory || s.clipOutputDirectory || '');
+  set('obs-format',    s.obsOutputFormat ?? 'mp4');
+  set('obs-resolution', s.obsResolution  ?? '1920x1080');
+  set('obs-framerate', String(s.obsFramerate ?? 30));
 
   renderTagList(s.tagTypes ?? []);
 }
@@ -185,16 +184,17 @@ function bindEvents() {
 // ── Gather current form values ────────────────────────────────────────────────
 
 function gather() {
+  const outputDir = get('output-dir');
   return {
-    obsHost:             get('obs-host')             || 'localhost',
-    obsPort:             parseInt(get('obs-port'))   || 4455,
+    obsHost:             get('obs-host')              || 'localhost',
+    obsPort:             parseInt(get('obs-port'))    || 4455,
     obsPassword:         get('obs-password'),
     obsExePath:          get('obs-exe-path'),
-    outputDirectory:     get('obs-output-dir'),
+    outputDirectory:     outputDir,
     obsOutputFormat:     get('obs-format'),
     obsResolution:       get('obs-resolution'),
     obsFramerate:        parseInt(get('obs-framerate')) || 30,
-    clipOutputDirectory: get('clip-output-dir'),
+    clipOutputDirectory: outputDir,
     tagTypes:            tagsFromDOM(),
   };
 }

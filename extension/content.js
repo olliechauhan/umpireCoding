@@ -74,7 +74,7 @@
       <div class="header" id="drag-handle">
         <span class="title">Umpire Coder</span>
         <div class="controls">
-          <button class="ctrl" id="folder-btn" title="Copy output folder path">📁</button>
+          <button class="ctrl" id="folder-btn" title="Open output folder">📁</button>
           <button class="ctrl" id="layout-btn" title="Toggle thin/wide">⇔</button>
           <button class="ctrl" id="settings-btn" title="Settings">⚙</button>
           <button class="ctrl" id="min-btn" title="Minimise">−</button>
@@ -154,15 +154,15 @@
     // Settings
     q('#settings-btn').addEventListener('click', () => sendMsg({ type: 'OPEN_SETTINGS' }));
 
-    // Folder — copy configured output path to clipboard
+    // Folder — open output directory in File Explorer
     q('#folder-btn').addEventListener('click', () => {
-      const dir = settings?.clipOutputDirectory || settings?.outputDirectory;
+      const dir = settings?.outputDirectory || settings?.clipOutputDirectory;
       if (!dir) {
         flash('No output directory set — configure in Settings.', 'error');
         return;
       }
-      navigator.clipboard.writeText(dir).catch(() => {});
-      flash('Path copied: ' + dir, 'success');
+      sendMsg({ type: 'OPEN_FOLDER', path: dir }).catch(() => {});
+      flash('Opening folder…', 'success');
     });
 
     // Drag (header)
