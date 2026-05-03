@@ -43,8 +43,7 @@ function buildPanelHTML() {
       <span class="title">Umpire Coder</span>
       <div class="controls">
         <button class="ctrl" id="folder-btn" title="Open output folder">📁</button>
-        <button class="ctrl" id="layout-btn" title="Toggle thin/wide">⇔</button>
-        <button class="ctrl" id="settings-btn" title="Settings">⚙</button>
+<button class="ctrl" id="settings-btn" title="Settings">⚙</button>
         <button class="ctrl" id="min-btn" title="Minimise">−</button>
       </div>
     </div>
@@ -102,15 +101,6 @@ function bindEvents() {
   q('#min-btn').addEventListener('click', async () => {
     const win = await chrome.windows.getCurrent();
     chrome.windows.update(win.id, { state: 'minimized' });
-  });
-
-  // Layout toggle — narrow/wide; resize the OS window to match
-  let thinMode = false;
-  q('#layout-btn').addEventListener('click', async () => {
-    thinMode = !thinMode;
-    document.body.classList.toggle('thin', thinMode);
-    const win = await chrome.windows.getCurrent();
-    chrome.windows.update(win.id, { width: thinMode ? 175 : 320 });
   });
 
   // Settings
