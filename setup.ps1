@@ -170,6 +170,13 @@ Set-IniValue $globalIni "Basic"   "SceneCollectionFile" "Umpire Coder"
 Set-IniValue $profileIni "Output"       "Mode"     "Simple"
 Set-IniValue $profileIni "SimpleOutput" "FilePath" $recordingPath
 
+# Audio devices -- these create the Desktop Audio and Mic/Aux channels in OBS
+Set-IniValue $profileIni "Audio" "DesktopDevice1" "default"
+Set-IniValue $profileIni "Audio" "DesktopDevice2" "disabled"
+Set-IniValue $profileIni "Audio" "AuxDevice1"     "default"
+Set-IniValue $profileIni "Audio" "AuxDevice2"     "disabled"
+Set-IniValue $profileIni "Audio" "AuxDevice3"     "disabled"
+
 # Scene collection: Stream Capture source + Mic/Aux muted
 $sceneJson = @"
 {
@@ -185,6 +192,30 @@ $sceneJson = @"
     "scaling_off_y": 0.0,
     "scene_order": [{"name": "Match Recording"}],
     "sources": [
+        {
+            "balance": 0.5,
+            "deinterlace_field_order": 0,
+            "deinterlace_mode": 0,
+            "enabled": true,
+            "flags": 0,
+            "hotkeys": {},
+            "id": "wasapi_output_capture",
+            "mixers": 255,
+            "monitoring_type": 0,
+            "muted": false,
+            "name": "Desktop Audio",
+            "prev_ver": 503316480,
+            "private_settings": {},
+            "push-to-mute-delay": 0,
+            "push-to-talk-delay": 0,
+            "settings": {
+                "device_id": "default",
+                "use_device_timing": false
+            },
+            "sync": 0,
+            "versioned_id": "wasapi_output_capture",
+            "volume": 1.0
+        },
         {
             "balance": 0.5,
             "deinterlace_field_order": 0,
