@@ -87,9 +87,23 @@ async function handle(message) {
       const { settings } = await chrome.storage.local.get('settings');
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
+      let crop = null;
+      if (activeTab?.id) {
+        try {
+          const [{ result }] = await chrome.scripting.executeScript({
+            target: { tabId: activeTab.id },
+            func: getVideoCrop,
+          });
+          crop = result;
+        } catch { /* non-fatal — page may not be scriptable */ }
+      }
+
       try {
         await obs.connect(settings.obsHost, settings.obsPort, settings.obsPassword);
         await obs.updateWindowCaptureToChromeWindow(activeTab?.title ?? '');
+        if (crop) {
+          await obs.cropWindowCapture(crop.cropLeft, crop.cropTop, crop.cropRight, crop.cropBottom);
+        }
         await obs.startRecording();
       } catch (err) {
         return {
@@ -311,6 +325,28 @@ function buildEventLog(matchState) {
 async function downloadEventLog(jsonData, filename) {
   const dataUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonData);
   await chrome.downloads.download({ url: dataUrl, filename, saveAs: false });
+}
+
+// Runs inside the page via chrome.scripting.executeScript — must be self-contained.
+function getVideoCrop() {
+  const videos = Array.from(document.querySelectorAll('video'))
+    .filter(v => v.offsetWidth > 0 && v.offsetHeight > 0);
+  if (!videos.length) return null;
+
+  const video = videos.reduce((best, v) =>
+    v.offsetWidth * v.offsetHeight > best.offsetWidth * best.offsetHeight ? v : best
+  );
+
+  const rect = video.getBoundingClientRect();
+  const dpr  = window.devicePixelRatio || 1;
+  const topChrome = window.outerHeight - window.innerHeight; // tabs bar + address bar in CSS px
+
+  return {
+    cropLeft:   Math.round(rect.left * dpr),
+    cropTop:    Math.round((topChrome + rect.top) * dpr),
+    cropRight:  Math.round((window.outerWidth - rect.right) * dpr),
+    cropBottom: Math.round((window.outerHeight - rect.bottom) * dpr),
+  };
 }
 
 function sendNativeMessage(host, message) {

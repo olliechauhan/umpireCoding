@@ -195,6 +195,31 @@ export class OBSWebSocket {
     } catch { /* non-fatal — don't block match start */ }
   }
 
+  // ── Crop ───────────────────────────────────────────────────────────────────
+
+  /**
+   * Apply pixel crop to every window_capture source in the current scene so
+   * only the video element area is recorded. Non-fatal — errors are swallowed.
+   */
+  async cropWindowCapture(cropLeft, cropTop, cropRight, cropBottom) {
+    try {
+      const { currentProgramSceneName } = await this._call('GetCurrentProgramScene');
+      const { sceneItems = [] } = await this._call('GetSceneItemList', {
+        sceneName: currentProgramSceneName,
+      });
+      for (const item of sceneItems) {
+        if (!item.inputKind?.includes('window_capture')) continue;
+        await this._call('SetSceneItemTransform', {
+          sceneName: currentProgramSceneName,
+          sceneItemId: item.sceneItemId,
+          sceneItemTransform: { cropLeft, cropTop, cropRight, cropBottom },
+        });
+      }
+    } catch (err) {
+      console.warn('[OBS] cropWindowCapture failed:', err.message);
+    }
+  }
+
   // ── Settings ───────────────────────────────────────────────────────────────
 
   /** Push video and output-directory settings to OBS. */
