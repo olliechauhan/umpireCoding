@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function mount() {
   document.body.innerHTML = buildPanelHTML();
   bindEvents();
+  startAutoResize();
 }
 
 function buildPanelHTML() {
@@ -306,6 +307,27 @@ function showPostMatchScreen(result) {
   }
 
   body.querySelector('#close-overlay-btn').addEventListener('click', () => window.close());
+}
+
+// ── Auto-resize ──────────────────────────────────────────────────────────────
+
+let _cachedWinId = null;
+let _chromeH     = null; // title bar + border height, computed once
+
+async function resizeToContent() {
+  if (_chromeH === null) _chromeH = window.outerHeight - window.innerHeight;
+  const targetH = Math.round(document.body.offsetHeight + _chromeH);
+  if (!_cachedWinId) {
+    const win = await chrome.windows.getCurrent();
+    _cachedWinId = win.id;
+  }
+  chrome.windows.update(_cachedWinId, { height: targetH });
+}
+
+function startAutoResize() {
+  resizeToContent();
+  const ro = new ResizeObserver(() => resizeToContent());
+  ro.observe(document.body);
 }
 
 // ── Timer ────────────────────────────────────────────────────────────────────

@@ -266,12 +266,11 @@ async function startMatchAndInjectOverlay(matchData) {
 
 async function openOverlayWindow() {
   const win = await chrome.windows.create({
-    url:    chrome.runtime.getURL('overlay/overlay.html'),
-    type:   'popup',
-    width:  320,
-    height: 620,
-    left:   20,
-    top:    20,
+    url:   chrome.runtime.getURL('overlay/overlay.html'),
+    type:  'popup',
+    width: 320,
+    left:  20,
+    top:   20,
   });
   overlayWindowId = win.id;
 }
