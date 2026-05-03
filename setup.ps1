@@ -27,42 +27,26 @@ function Reload-Path {
 }
 
 function Install-Winget {
-    param($Id, $Name)
+    param($Id, $Name, [string[]]$KillProcesses = @())
     $listResult = winget list --id $Id --accept-source-agreements 2>&1 | Out-String
     if ($listResult -match [regex]::Escape($Id)) {
         Write-Skip "$Name already installed."
         return
     }
+    if ($KillProcesses) {
+        Stop-Process -Name $KillProcesses -Force -ErrorAction SilentlyContinue
+    }
     Write-Info "Installing $Name..."
-    $attempts = 0
-    do {
-        $attempts++
-        winget install --id $Id --accept-package-agreements --accept-source-agreements --silent
-        $code = $LASTEXITCODE
-        if ($code -eq 0) {
-            Reload-Path
-            Write-OK "$Name installed."
-            return
-        } elseif ($code -eq 6) {
-            if ($attempts -ge 2) {
-                Write-Host "  ERROR: $Name still could not install." -ForegroundColor Red
-                Write-Host "  Install it manually from its website then re-run this script." -ForegroundColor Red
-                exit 1
-            }
-            Write-Host ""
-            Write-Host "  The $Name installer found files that are still in use." -ForegroundColor Yellow
-            Write-Host "  This usually means $Name has background processes left over from a previous install." -ForegroundColor Yellow
-            Write-Host "  1. Press Ctrl+Shift+Esc to open Task Manager"
-            Write-Host "  2. Look for any $Name processes and click End Task on each one"
-            Write-Host ""
-            Read-Host "  Press Enter to retry"
-        } else {
-            Write-Host ""
-            Write-Host "  WARNING: $Name installer exited with code $code." -ForegroundColor Yellow
-            Write-Host "  If $Name is not working, install it manually from its website then re-run." -ForegroundColor Yellow
-            return
-        }
-    } while ($true)
+    winget install --id $Id --accept-package-agreements --accept-source-agreements --silent
+    $code = $LASTEXITCODE
+    if ($code -eq 0) {
+        Reload-Path
+        Write-OK "$Name installed."
+    } else {
+        Write-Host ""
+        Write-Host "  WARNING: $Name installer exited with code $code." -ForegroundColor Yellow
+        Write-Host "  If $Name is not working, install it manually from its website then re-run." -ForegroundColor Yellow
+    }
 }
 
 # Reads an INI file, sets a key in a section, and writes it back.
@@ -124,7 +108,7 @@ Install-Winget "Git.Git" "Git"
 
 # -- Step 3: OBS Studio -------------------------------------------------------
 Write-Step "3/8" "OBS Studio"
-Install-Winget "OBSProject.OBSStudio" "OBS Studio"
+Install-Winget "OBSProject.OBSStudio" "OBS Studio" -KillProcesses @("obs64", "obs32", "obs-browser-page", "obs-ffmpeg-mux")
 
 # -- Step 4: ffmpeg -----------------------------------------------------------
 Write-Step "4/8" "ffmpeg"
