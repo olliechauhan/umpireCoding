@@ -117,6 +117,18 @@
           <button id="apply-obs-btn" class="primary-btn">Apply OBS Settings</button>
           <span id="obs-status" class="inline-status"></span>
         </div>
+
+        <div class="field slider-field">
+          <label for="crop-margin">Video crop margin — <span id="crop-margin-value">200</span> px</label>
+          <input type="range" id="crop-margin" min="0" max="400" step="10" value="200">
+          <span class="field-hint">
+            When a match starts, the recording is automatically cropped to the video player area.
+            This value controls how much larger than the raw &lt;video&gt; element an ancestor can be
+            before it is considered a page layout wrapper rather than part of the player.
+            Increase it if overlays (scoreboards, graphics) are being cut off;
+            decrease it if unrelated page content is being included.
+          </span>
+        </div>
       </section>
 
     </main>

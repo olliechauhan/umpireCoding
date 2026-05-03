@@ -35,6 +35,7 @@ const DEFAULT_SETTINGS = {
   obsResolution: '1920x1080',
   obsFramerate: 30,
   clipOutputDirectory: '',
+  cropOverlayMargin: 200,
   tagTypes: DEFAULT_TAG_TYPES,
 };
 
@@ -90,9 +91,11 @@ async function handle(message) {
       let crop = null;
       if (activeTab?.id) {
         try {
+          const margin = settings.cropOverlayMargin ?? 200;
           const [{ result }] = await chrome.scripting.executeScript({
             target: { tabId: activeTab.id },
             func: getVideoCrop,
+            args: [margin],
           });
           crop = result;
         } catch { /* non-fatal — page may not be scriptable */ }
@@ -328,7 +331,7 @@ async function downloadEventLog(jsonData, filename) {
 }
 
 // Runs inside the page via chrome.scripting.executeScript — must be self-contained.
-function getVideoCrop() {
+function getVideoCrop(overlayMargin) {
   const videos = Array.from(document.querySelectorAll('video'))
     .filter(v => v.offsetWidth > 0 && v.offsetHeight > 0);
   if (!videos.length) return null;
@@ -339,14 +342,14 @@ function getVideoCrop() {
 
   // Walk up from the <video> to find the player container — the element that
   // wraps both the video and any HTML overlays (scoreboards, controls, etc.).
-  // Stop as soon as the ancestor grows by more than 200 CSS px in either
-  // dimension; anything larger is a page layout wrapper, not the player.
+  // Stop as soon as an ancestor exceeds the video size by more than overlayMargin
+  // CSS px; anything larger is a page layout wrapper, not the player.
   const vRect = video.getBoundingClientRect();
   let playerRect = vRect;
   let el = video.parentElement;
   while (el && el !== document.documentElement) {
     const r = el.getBoundingClientRect();
-    if (r.width > vRect.width + 200 || r.height > vRect.height + 200) break;
+    if (r.width > vRect.width + overlayMargin || r.height > vRect.height + overlayMargin) break;
     playerRect = r;
     el = el.parentElement;
   }

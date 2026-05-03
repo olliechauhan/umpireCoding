@@ -15,6 +15,8 @@ function populate(s) {
   set('obs-format',    s.obsOutputFormat ?? 'mp4');
   set('obs-resolution', s.obsResolution  ?? '1920x1080');
   set('obs-framerate', String(s.obsFramerate ?? 30));
+  set('crop-margin',   String(s.cropOverlayMargin ?? 200));
+  document.getElementById('crop-margin-value').textContent = s.cropOverlayMargin ?? 200;
 
   renderTagList(s.tagTypes ?? []);
 }
@@ -135,6 +137,11 @@ function bindEvents() {
     if (e.key === 'Enter') addBtn.click();
   });
 
+  // Live-update the crop margin label as the slider moves
+  document.getElementById('crop-margin').addEventListener('input', (e) => {
+    document.getElementById('crop-margin-value').textContent = e.target.value;
+  });
+
   // Test OBS connection
   document.getElementById('test-conn-btn').addEventListener('click', async () => {
     const statusEl = document.getElementById('test-conn-status');
@@ -194,6 +201,7 @@ function gather() {
     obsOutputFormat:     get('obs-format'),
     obsResolution:       get('obs-resolution'),
     obsFramerate:        parseInt(get('obs-framerate')) || 30,
+    cropOverlayMargin:   parseInt(get('crop-margin'))  || 200,
     clipOutputDirectory: outputDir,
     tagTypes:            tagsFromDOM(),
   };
