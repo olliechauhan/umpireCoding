@@ -318,15 +318,19 @@ $chromePaths = @(
 )
 $chromeExe = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
+# Open Chrome to google.com and minimise -- Chrome must be visible to OBS
+# before OBS launches so it appears in the window capture dropdown
 if ($chromeExe) {
-    Start-Process $chromeExe -ArgumentList "--new-window about:blank" -WindowStyle Minimized
-    Write-Info "Chrome opened in background (needed for OBS window selection)."
+    Start-Process $chromeExe -ArgumentList "--new-window https://www.google.com" -WindowStyle Minimized
+    Write-Info "Chrome opened (minimised) -- waiting for it to load..."
+    Start-Sleep -Seconds 3
 } else {
     Write-Host ""
     Write-Host "  Could not find Chrome automatically. Please open Chrome manually." -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
 }
 
-# Find OBS and open it with our scene collection forced via CLI argument.
+# Open OBS with our scene collection forced via CLI argument.
 # This bypasses whatever global.ini may have saved on a previous OBS close.
 $obsPaths = @(
     "${env:ProgramFiles}\obs-studio\bin\64bit\obs64.exe",
@@ -334,16 +338,16 @@ $obsPaths = @(
 )
 $obsExe = $obsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-Write-Host ""
-Write-Host "  MANUAL ACTION - Select Chrome in OBS:" -ForegroundColor White
-Write-Host "  --------------------------------------"
-
 if ($obsExe) {
     Start-Process $obsExe -ArgumentList '--collection "Umpire Coder"'
-    Write-Host "  OBS has been opened with the Umpire Coder scene collection."
+    Write-Info "OBS opened with the Umpire Coder scene collection."
 } else {
     Write-Host "  Could not find OBS automatically - please open it manually." -ForegroundColor Yellow
 }
+
+Write-Host ""
+Write-Host "  MANUAL ACTION - Select Chrome in OBS:" -ForegroundColor White
+Write-Host "  --------------------------------------"
 
 Write-Host ""
 Write-Host "  In OBS:"
