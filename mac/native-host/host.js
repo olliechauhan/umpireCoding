@@ -251,7 +251,13 @@ async function main() {
         results.push({ type: 'cleanup', success: false, error: `Could not delete recording: ${err.message}` });
       }
     } catch (err) {
-      const detail = err.stderr ? err.stderr.toString().trim().split('\n').pop() : err.message;
+      // clip_cutter.js logs per-clip errors to stdout (console.log), so check
+      // stdout first for a useful message, then stderr, then the generic message.
+      const fromStdout = err.stdout ? err.stdout.toString().trim().split('\n').filter(Boolean).pop() : '';
+      const fromStderr = err.stderr ? err.stderr.toString().trim().split('\n').filter(Boolean).pop() : '';
+      const detail = fromStdout || fromStderr || err.message;
+      dbg('clip_cutter failed — stdout: ' + (err.stdout || '').toString().trim());
+      dbg('clip_cutter failed — stderr: ' + (err.stderr || '').toString().trim());
       results.push({ type: 'clips', success: false, error: detail });
     }
   } else {
