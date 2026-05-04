@@ -159,6 +159,28 @@ $scenesDir     = Join-Path $obsConfig "basic\scenes"
 $sceneFile     = Join-Path $scenesDir "Umpire Coder.json"
 $recordingPath = Join-Path $env:USERPROFILE "Videos\umpire-recordings"
 
+$obsPaths = @(
+    "${env:ProgramFiles}\obs-studio\bin\64bit\obs64.exe",
+    "${env:ProgramFiles(x86)}\obs-studio\bin\64bit\obs64.exe"
+)
+$obsExe = $obsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+# On a fresh OBS install global.ini does not exist yet. If we write our config
+# before OBS has ever run, OBS will overwrite it with "Untitled" defaults during
+# its first-time initialisation. So: detect a fresh install, launch OBS briefly
+# to let it create its default config structure, then kill it and write ours.
+if (-not (Test-Path $globalIni)) {
+    Write-Info "Fresh OBS install detected -- running first-time initialisation..."
+    if ($obsExe) {
+        $obsProc = Start-Process $obsExe -WorkingDirectory (Split-Path $obsExe) -PassThru
+        Start-Sleep -Seconds 10
+        $obsProc | Stop-Process -Force -ErrorAction SilentlyContinue
+        Get-Process "obs64","obs32" -ErrorAction SilentlyContinue | Stop-Process -Force
+        Start-Sleep -Seconds 2
+    }
+    Write-Info "OBS initialised."
+}
+
 foreach ($d in @($obsConfig, $profileDir, $scenesDir, $recordingPath)) {
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
@@ -449,14 +471,6 @@ if ($chromeExe) {
     Write-Host "  Could not find Chrome automatically. Please open Chrome manually." -ForegroundColor Yellow
     Start-Sleep -Seconds 2
 }
-
-# Open OBS with our scene collection forced via CLI argument.
-# This bypasses whatever global.ini may have saved on a previous OBS close.
-$obsPaths = @(
-    "${env:ProgramFiles}\obs-studio\bin\64bit\obs64.exe",
-    "${env:ProgramFiles(x86)}\obs-studio\bin\64bit\obs64.exe"
-)
-$obsExe = $obsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
 if ($obsExe) {
     Start-Process $obsExe -WorkingDirectory (Split-Path $obsExe)
