@@ -480,28 +480,48 @@ if [ "${#EXT_ID}" -ne 32 ]; then
     warn "Extension ID is ${#EXT_ID} characters - expected 32. Continuing anyway."
 fi
 
-HOST_DIR="$INSTALL_DIR/mac/native-host"
-HOST_SH="$HOST_DIR/host.sh"
 MANIFEST_NAME="com.umpirecoder.postprocess"
-MANIFEST_FILE="$HOST_DIR/$MANIFEST_NAME.json"
 CHROME_HOSTS_DIR="$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts"
 
-chmod +x "$HOST_SH"
+# Install native host and post-processing to ~/.umpire-coder — this directory
+# is outside ~/Documents so Chrome's sandboxed subprocess can access it freely.
+UC_DIR="$HOME/.umpire-coder"
+mkdir -p "$UC_DIR/native-host" "$UC_DIR/post-processing" "$UC_DIR/bin"
 
-cat > "$MANIFEST_FILE" <<EOF
+cp "$INSTALL_DIR/mac/native-host/host.js"     "$UC_DIR/native-host/host.js"
+cp "$INSTALL_DIR/mac/native-host/package.json" "$UC_DIR/native-host/package.json"
+cp -r "$INSTALL_DIR/post-processing/."        "$UC_DIR/post-processing/"
+(cd "$UC_DIR/post-processing" && npm install --silent)
+[ -f "$INSTALL_DIR/bin/ffmpeg" ] && cp "$INSTALL_DIR/bin/ffmpeg" "$UC_DIR/bin/ffmpeg"
+
+# Write host.sh wrapper inside ~/.umpire-coder (not in ~/Documents)
+UC_HOST_SH="$UC_DIR/native-host/host.sh"
+cat > "$UC_HOST_SH" <<'HOSTEOF'
+#!/bin/bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export UC_POST_DIR="$SCRIPT_DIR/../post-processing"
+export UC_LOG="$SCRIPT_DIR/debug.log"
+[ -d "$SCRIPT_DIR/../bin" ] && export PATH="$SCRIPT_DIR/../bin:$PATH"
+for dir in /usr/local/bin /opt/homebrew/bin /opt/homebrew/opt/node/bin \
+           /opt/homebrew/opt/node@20/bin /opt/homebrew/opt/node@18/bin /usr/bin; do
+  [ -x "$dir/node" ] && exec "$dir/node" "$SCRIPT_DIR/host.js"
+done
+exec node "$SCRIPT_DIR/host.js"
+HOSTEOF
+chmod +x "$UC_HOST_SH"
+
+mkdir -p "$CHROME_HOSTS_DIR"
+cat > "$CHROME_HOSTS_DIR/$MANIFEST_NAME.json" <<EOF
 {
   "name": "$MANIFEST_NAME",
   "description": "Umpire Coder post-processing host",
-  "path": "$HOST_SH",
+  "path": "$UC_HOST_SH",
   "type": "stdio",
   "allowed_origins": ["chrome-extension://$EXT_ID/"]
 }
 EOF
 
-mkdir -p "$CHROME_HOSTS_DIR"
-cp "$MANIFEST_FILE" "$CHROME_HOSTS_DIR/$MANIFEST_NAME.json"
-
-ok "Native messaging host registered."
+ok "Native messaging host registered (installed to ~/.umpire-coder)."
 
 # ---------------------------------------------------------------------------
 # Done

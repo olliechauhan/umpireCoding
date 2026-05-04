@@ -250,10 +250,11 @@ function showPostMatchScreen(result) {
 
   if (!pr) {
     const jsonFile  = result.jsonFilename || '<events.json>';
-    const videoPath = result.outputPath   || '<path/to/recording.mp4>';
+    const jsonPath  = `~/Downloads/${jsonFile}`;
+    const videoPath = result.outputPath   || '<path/to/recording.mov>';
     const outFlag   = result.clipOutputDir ? ` --out "${result.clipOutputDir}"` : '';
-    const clipCmd   = `node clip_cutter.js --json "${jsonFile}" --video "${videoPath}"${outFlag}`;
-    const reportCmd = `node report_generator.js --json "${jsonFile}"${outFlag}`;
+    const clipCmd   = `node clip_cutter.js --json "${jsonPath}" --video "${videoPath}"${outFlag}`;
+    const reportCmd = `node report_generator.js --json "${jsonPath}"${outFlag}`;
 
     statusHTML = `
       <p class="post-hint">JSON saved to Downloads. Run from the <code>post-processing</code> folder:</p>
@@ -261,7 +262,6 @@ function showPostMatchScreen(result) {
       <div class="cmd-block">${esc(clipCmd)}</div>
       <div class="post-label" style="margin-top:10px">Generate PDF report</div>
       <div class="cmd-block">${esc(reportCmd)}</div>
-      <p class="post-hint" style="margin-top:8px">To automate this, run <code>install.ps1</code> in <code>native-host/</code>.</p>
     `;
   } else if (!pr.success) {
     statusHTML = `<p class="post-status error">Processing error: ${esc(pr.error || 'unknown')}</p>`;

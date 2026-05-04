@@ -14,15 +14,16 @@ import { homedir } from 'os';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-// post-processing/ is two levels up: mac/native-host/ -> mac/ -> repo root
-const POST_DIR = join(__dirname, '..', '..', 'post-processing');
+// UC_POST_DIR is set by host.sh when running from ~/.umpire-coder (macOS).
+// Falls back to the repo-relative path for development / Windows use.
+const POST_DIR = process.env.UC_POST_DIR || join(__dirname, '..', '..', 'post-processing');
 
 // Use the same Node binary that is running this script so post-processing
 // scripts work even when Chrome's PATH doesn't include node.
 const NODE = process.execPath;
 
-// Debug log — written next to host.js so it's always writable.
-const LOG = join(__dirname, 'debug.log');
+// Debug log — UC_LOG is set by host.sh; falls back alongside host.js.
+const LOG = process.env.UC_LOG || join(__dirname, 'debug.log');
 function dbg(msg) {
   const line = new Date().toISOString() + '  ' + msg + '\n';
   process.stderr.write(line);
@@ -189,9 +190,11 @@ async function main() {
 
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
 
+  // Default to ~/Movies/umpire-clips on macOS — ~/Documents is TCC-protected
+  // and Chrome's subprocess cannot write there. ~/Movies is not protected.
   const baseDir = clipOutputDir || join(
     process.env.HOME || '.',
-    'Documents', 'umpire-clips'
+    'Movies', 'umpire-clips'
   );
 
   // Compute the per-match subfolder from the JSON content
