@@ -12,6 +12,17 @@
 
 $ErrorActionPreference = 'Stop'
 
+# Pin this console window to always-on-top so it stays visible when OBS opens.
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+public class WinHelper {
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+    [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow();
+}
+"@
+$null = [WinHelper]::SetWindowPos([WinHelper]::GetConsoleWindow(), [IntPtr](-1), 0, 0, 0, 0, 0x0003)
+
 $REPO_URL    = "https://github.com/olliechauhan/umpireCoding.git"
 $INSTALL_DIR = Join-Path $env:USERPROFILE "Documents\umpireCoding"
 $OBS_PASSWORD = "umpire123"
