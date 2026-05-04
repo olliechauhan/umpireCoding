@@ -126,16 +126,38 @@ MonitoringDeviceName=
 
 [System.IO.File]::WriteAllText($profileIni, $basicIniContent, [System.Text.Encoding]::UTF8)
 
+# -- profile user.ini ----------------------------------------------------------
+# OBS 31+ split profile settings across basic.ini (shared) and user.ini
+# (per-user). Global Audio Devices may be stored in user.ini on newer builds.
+# Write a user.ini that mirrors the audio settings from basic.ini so both
+# are covered regardless of which file OBS reads on this install.
+Write-Host "Writing profile user.ini (fresh)..." -ForegroundColor Cyan
+
+$userIniPath = Join-Path $profileDir "user.ini"
+$userIniContent = @"
+[Audio]
+DesktopDevice1=default
+DesktopDevice2=disabled
+AuxDevice1=default
+AuxDevice2=disabled
+AuxDevice3=disabled
+AuxDevice4=disabled
+MonitoringDeviceId=default
+MonitoringDeviceName=
+"@
+
+[System.IO.File]::WriteAllText($userIniPath, $userIniContent, [System.Text.Encoding]::UTF8)
+
 # Diagnostic -- print file contents so we can verify the writes
 Write-Host "  $profileIni" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "  --- basic.ini contents ---" -ForegroundColor DarkGray
+Write-Host "  --- basic.ini ---" -ForegroundColor DarkGray
 Get-Content $profileIni | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-Write-Host "  --------------------------" -ForegroundColor DarkGray
-Write-Host ""
-Write-Host "  --- global.ini (full) ---" -ForegroundColor DarkGray
+Write-Host "  --- user.ini ---" -ForegroundColor DarkGray
+Get-Content $userIniPath | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+Write-Host "  --- global.ini ---" -ForegroundColor DarkGray
 Get-Content $globalIni | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-Write-Host "  -------------------------" -ForegroundColor DarkGray
+Write-Host "  -----------------" -ForegroundColor DarkGray
 
 # -- scene collection JSON -----------------------------------------------------
 Write-Host "Writing scene collection JSON..." -ForegroundColor Cyan
