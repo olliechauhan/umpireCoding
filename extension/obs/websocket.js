@@ -175,15 +175,17 @@ export class OBSWebSocket {
           propertyItems = res.propertyItems ?? [];
         } catch { continue; }
 
-        const chromeWindows = propertyItems.filter(w =>
-          w.itemValue?.toLowerCase().includes('chrome.exe') ||   // Windows
-          w.itemValue?.toLowerCase().includes('google chrome') || // macOS
-          w.itemName?.toLowerCase().includes('chrome')
-        );
+        // itemValue is a string on Windows (e.g. "chrome.exe") and an integer
+        // window ID on macOS. itemName always contains the app name in brackets.
+        const chromeWindows = propertyItems.filter(w => {
+          const val  = String(w.itemValue ?? '').toLowerCase();
+          const name = String(w.itemName  ?? '').toLowerCase();
+          return val.includes('chrome.exe') || val.includes('google chrome') || name.includes('google chrome');
+        });
         if (!chromeWindows.length) continue;
 
         // Prefer the window whose display name includes the current tab title.
-        const best = (tabTitle && chromeWindows.find(w => w.itemName?.includes(tabTitle)))
+        const best = (tabTitle && chromeWindows.find(w => String(w.itemName ?? '').includes(tabTitle)))
           ?? chromeWindows[0];
 
         try {
