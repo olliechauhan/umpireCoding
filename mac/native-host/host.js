@@ -136,7 +136,8 @@ async function launchObs(port, customPath) {
     throw new Error(`OBS not found at: ${obsPath}. ${hint}`);
   }
 
-  spawn('open', [obsPath], { detached: true, stdio: 'ignore' }).unref();
+  // -g = open without bringing OBS to the foreground, so Chrome popup stays open.
+  spawn('open', ['-g', obsPath], { detached: true, stdio: 'ignore' }).unref();
   await waitForPort(port, 20_000);
 }
 
