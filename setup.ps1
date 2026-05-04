@@ -152,30 +152,66 @@ foreach ($d in @($obsConfig, $profileDir, $scenesDir, $recordingPath)) {
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
 
-# WebSocket server
-Set-IniValue $globalIni "OBSWebSocket" "ServerEnabled"  "true"
-Set-IniValue $globalIni "OBSWebSocket" "ServerPort"     "4455"
-Set-IniValue $globalIni "OBSWebSocket" "AuthRequired"   "true"
-Set-IniValue $globalIni "OBSWebSocket" "ServerPassword" $OBS_PASSWORD
-Set-IniValue $globalIni "OBSWebSocket" "AlertsEnabled"  "false"
+# global.ini -- write fresh so no stale [Locations] section can redirect OBS
+# to look for profiles/scenes in the wrong place (OBS writes that section on
+# close and it overrides [Basic] profile/scene settings on the next launch).
+[System.IO.File]::WriteAllText($globalIni, @"
+[General]
+LastVersion=30030000
+Pre31Migrated=true
 
-# Active profile + scene collection
-Set-IniValue $globalIni "General" "LastVersion"       "30030000"
-Set-IniValue $globalIni "Basic"   "Profile"             "Umpire Coder"
-Set-IniValue $globalIni "Basic"   "ProfileDir"          "Umpire Coder"
-Set-IniValue $globalIni "Basic"   "SceneCollection"     "Umpire Coder"
-Set-IniValue $globalIni "Basic"   "SceneCollectionFile" "Umpire Coder"
+[Basic]
+Profile=Umpire Coder
+ProfileDir=Umpire Coder
+SceneCollection=Umpire Coder
+SceneCollectionFile=Umpire Coder
 
-# Recording output path
-Set-IniValue $profileIni "Output"       "Mode"     "Simple"
-Set-IniValue $profileIni "SimpleOutput" "FilePath" $recordingPath
+[OBSWebSocket]
+ServerEnabled=true
+ServerPort=4455
+AuthRequired=true
+ServerPassword=$OBS_PASSWORD
+AlertsEnabled=false
+"@, [System.Text.Encoding]::UTF8)
 
-# Audio devices -- these create the Desktop Audio and Mic/Aux channels in OBS
-Set-IniValue $profileIni "Audio" "DesktopDevice1" "default"
-Set-IniValue $profileIni "Audio" "DesktopDevice2" "disabled"
-Set-IniValue $profileIni "Audio" "AuxDevice1"     "default"
-Set-IniValue $profileIni "Audio" "AuxDevice2"     "disabled"
-Set-IniValue $profileIni "Audio" "AuxDevice3"     "disabled"
+# basic.ini -- write fresh. SampleRate and ChannelSetup are required for OBS
+# to treat the [Audio] section as valid; without them it ignores the section
+# and all devices default to Disabled.
+[System.IO.File]::WriteAllText($profileIni, @"
+[Output]
+Mode=Simple
+
+[SimpleOutput]
+FilePath=$recordingPath
+
+[Audio]
+SampleRate=48000
+ChannelSetup=Stereo
+DesktopDevice1=default
+DesktopDevice2=disabled
+AuxDevice1=default
+AuxDevice2=disabled
+AuxDevice3=disabled
+AuxDevice4=disabled
+MonitoringDeviceId=default
+MonitoringDeviceName=
+"@, [System.Text.Encoding]::UTF8)
+
+# user.ini -- OBS 31+ reads per-user profile settings from here; mirror the
+# audio device settings so they are present regardless of which file OBS reads.
+[System.IO.File]::WriteAllText((Join-Path $profileDir "user.ini"), @"
+[Audio]
+SampleRate=48000
+ChannelSetup=Stereo
+DesktopDevice1=default
+DesktopDevice2=disabled
+AuxDevice1=default
+AuxDevice2=disabled
+AuxDevice3=disabled
+AuxDevice4=disabled
+MonitoringDeviceId=default
+MonitoringDeviceName=
+"@, [System.Text.Encoding]::UTF8)
 
 # Scene collection: Stream Capture source + Mic/Aux muted
 $sceneJson = @"
@@ -282,7 +318,7 @@ $sceneJson = @"
             "push-to-mute-delay": 0,
             "push-to-talk-delay": 0,
             "settings": {
-                "id_counter": 1,
+                "id_counter": 3,
                 "items": [
                     {
                         "align": 5,
@@ -297,6 +333,48 @@ $sceneJson = @"
                         "id": 1,
                         "locked": false,
                         "name": "Stream Capture",
+                        "pos": {"x": 0.0, "y": 0.0},
+                        "private_settings": {},
+                        "rot": 0.0,
+                        "scale": {"x": 1.0, "y": 1.0},
+                        "scale_filter": "disable",
+                        "show_in_multiview": true,
+                        "visible": true
+                    },
+                    {
+                        "align": 5,
+                        "bounds": {"x": 0.0, "y": 0.0},
+                        "bounds_align": 0,
+                        "bounds_type": 0,
+                        "crop_bottom": 0,
+                        "crop_left": 0,
+                        "crop_right": 0,
+                        "crop_top": 0,
+                        "group_item_backup": false,
+                        "id": 2,
+                        "locked": true,
+                        "name": "Desktop Audio",
+                        "pos": {"x": 0.0, "y": 0.0},
+                        "private_settings": {},
+                        "rot": 0.0,
+                        "scale": {"x": 1.0, "y": 1.0},
+                        "scale_filter": "disable",
+                        "show_in_multiview": true,
+                        "visible": true
+                    },
+                    {
+                        "align": 5,
+                        "bounds": {"x": 0.0, "y": 0.0},
+                        "bounds_align": 0,
+                        "bounds_type": 0,
+                        "crop_bottom": 0,
+                        "crop_left": 0,
+                        "crop_right": 0,
+                        "crop_top": 0,
+                        "group_item_backup": false,
+                        "id": 3,
+                        "locked": true,
+                        "name": "Mic/Aux",
                         "pos": {"x": 0.0, "y": 0.0},
                         "private_settings": {},
                         "rot": 0.0,
