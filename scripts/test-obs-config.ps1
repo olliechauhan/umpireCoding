@@ -264,7 +264,23 @@ $sceneJson = @"
 [System.IO.File]::WriteAllText($sceneFile, $sceneJson, [System.Text.Encoding]::UTF8)
 Write-Host "  $sceneFile" -ForegroundColor DarkGray
 
-# -- Open OBS -----------------------------------------------------------------
+# -- Open Chrome (minimised) then OBS ----------------------------------------
+$chromePaths = @(
+    "${env:ProgramFiles}\Google\Chrome\Application\chrome.exe",
+    "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe",
+    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+)
+$chromeExe = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+if ($chromeExe) {
+    Start-Process $chromeExe -ArgumentList "--new-window https://www.google.com" -WindowStyle Minimized
+    Write-Host "Chrome opened (minimised) -- waiting for it to register..." -ForegroundColor Cyan
+    Start-Sleep -Seconds 3
+} else {
+    Write-Host "Chrome not found automatically -- open it manually before checking OBS." -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+}
+
 Write-Host ""
 Write-Host "Config written. Opening OBS..." -ForegroundColor Green
 Write-Host ""
