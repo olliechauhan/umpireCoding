@@ -17,7 +17,28 @@
 
 import { execSync } from 'child_process';
 import { existsSync, mkdirSync, readFileSync } from 'fs';
-import { basename, join, resolve } from 'path';
+import { basename, dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Resolve the ffmpeg binary path.
+ * Priority:
+ *   1. UC_FFMPEG_PATH env var  (set by host.sh when running via native host)
+ *   2. ../bin/ffmpeg alongside this script  (bundled copy)
+ *   3. 'ffmpeg' — fall back to PATH
+ */
+function resolveFfmpeg() {
+  if (process.env.UC_FFMPEG_PATH && existsSync(process.env.UC_FFMPEG_PATH)) {
+    return process.env.UC_FFMPEG_PATH;
+  }
+  const bundled = join(__dirname, '..', 'bin', 'ffmpeg');
+  if (existsSync(bundled)) return bundled;
+  return 'ffmpeg';
+}
+
+const FFMPEG = resolveFfmpeg();
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 
@@ -96,9 +117,9 @@ function main() {
 
   // Check ffmpeg
   try {
-    execSync('ffmpeg -version', { stdio: 'ignore' });
+    execSync(`"${FFMPEG}" -version`, { stdio: 'ignore' });
   } catch {
-    console.error('ffmpeg not found on PATH. Install it from https://ffmpeg.org/download.html');
+    console.error(`ffmpeg not found. Tried: ${FFMPEG}\nInstall it from https://ffmpeg.org/download.html`);
     process.exit(1);
   }
 
@@ -148,7 +169,7 @@ function main() {
     }
 
     const cmd = [
-      'ffmpeg',
+      `"${FFMPEG}"`,
       '-ss', String(start),
       '-i', `"${videoPath}"`,
       '-t', String(CLIP_DUR),

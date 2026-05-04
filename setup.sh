@@ -502,6 +502,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export UC_POST_DIR="$SCRIPT_DIR/../post-processing"
 export UC_LOG="$SCRIPT_DIR/debug.log"
 [ -d "$SCRIPT_DIR/../bin" ] && export PATH="$SCRIPT_DIR/../bin:$PATH"
+[ -f "$SCRIPT_DIR/../bin/ffmpeg" ] && export UC_FFMPEG_PATH="$SCRIPT_DIR/../bin/ffmpeg"
 for dir in /usr/local/bin /opt/homebrew/bin /opt/homebrew/opt/node/bin \
            /opt/homebrew/opt/node@20/bin /opt/homebrew/opt/node@18/bin /usr/bin; do
   [ -x "$dir/node" ] && exec "$dir/node" "$SCRIPT_DIR/host.js"

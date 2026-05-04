@@ -206,14 +206,20 @@ async function main() {
 
   try { mkdirSync(matchDir, { recursive: true }); }
   catch (err) {
-    sendMessage({ success: false, error: 'Cannot create output dir: ' + err.message });
+    const hint = err.code === 'EPERM' || err.code === 'EACCES'
+      ? ' macOS blocks access to Downloads, Documents and Desktop from Chrome\'s background process. Choose a different folder such as Movies or your home directory.'
+      : '';
+    sendMessage({ success: false, error: 'Cannot create output dir: ' + err.message + hint });
     process.exit(1);
   }
 
   const jsonPath = join(matchDir, jsonFilename);
   try { writeFileSync(jsonPath, jsonData, 'utf8'); }
   catch (err) {
-    sendMessage({ success: false, error: 'Cannot save JSON: ' + err.message });
+    const hint = err.code === 'EPERM' || err.code === 'EACCES'
+      ? ' macOS blocks access to Downloads, Documents and Desktop from Chrome\'s background process. Choose a different folder such as Movies or your home directory.'
+      : '';
+    sendMessage({ success: false, error: 'Cannot save JSON: ' + err.message + hint });
     process.exit(1);
   }
 
