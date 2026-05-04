@@ -165,47 +165,56 @@ $obsPaths = @(
 )
 $obsExe = $obsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-# On a fresh OBS install global.ini does not exist yet. If we write our config
-# before OBS has ever run, OBS will overwrite it with "Untitled" defaults during
-# its first-time initialisation. So: detect a fresh install, launch OBS briefly
-# to let it create its default config structure, then kill it and write ours.
-if (-not (Test-Path $globalIni)) {
-    Write-Info "Fresh OBS install detected -- running first-time initialisation..."
-    if ($obsExe) {
-        $obsProc = Start-Process $obsExe -WorkingDirectory (Split-Path $obsExe) -PassThru
-        Start-Sleep -Seconds 10
-        $obsProc | Stop-Process -Force -ErrorAction SilentlyContinue
-        Get-Process "obs64","obs32" -ErrorAction SilentlyContinue | Stop-Process -Force
-        Start-Sleep -Seconds 2
+# Always let OBS run briefly before we write config. OBS performs first-time
+# initialisation and version migration on startup regardless of whether
+# global.ini already exists -- both create an "Untitled" profile that
+# overwrites any settings we wrote beforehand. By letting OBS init first,
+# killing it, then patching global.ini, we guarantee our settings are the
+# last thing written and OBS's own migration flags stay intact.
+Write-Info "Starting OBS to complete initialisation (this takes ~15 seconds)..."
+if ($obsExe) {
+    $obsProc = Start-Process $obsExe -WorkingDirectory (Split-Path $obsExe) -PassThru
+    # Wait for global.ini to appear (up to 20 s), then give OBS a few more
+    # seconds to finish writing all its initial config files before we kill it.
+    $deadline = (Get-Date).AddSeconds(20)
+    while (-not (Test-Path $globalIni) -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 500
     }
-    Write-Info "OBS initialised."
+    Start-Sleep -Seconds 6
+    $obsProc | Stop-Process -Force -ErrorAction SilentlyContinue
+    Get-Process "obs64","obs32" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Seconds 2
 }
 
 foreach ($d in @($obsConfig, $profileDir, $scenesDir, $recordingPath)) {
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
 
-# global.ini -- write fresh so no stale [Locations] section can redirect OBS
-# to look for profiles/scenes in the wrong place (OBS writes that section on
-# close and it overrides [Basic] profile/scene settings on the next launch).
-[System.IO.File]::WriteAllText($globalIni, @"
-[General]
-LastVersion=30030000
-Pre31Migrated=true
+# Strip the [Locations] section from global.ini if OBS wrote one -- it
+# redirects profile/scene lookups to wrong paths. Then patch in our settings
+# using Set-IniValue so OBS's own keys (LastVersion, migration flags, etc.)
+# are preserved and no migration re-runs on the next launch.
+if (Test-Path $globalIni) {
+    $raw = Get-Content $globalIni -Raw -Encoding UTF8
+    $filtered = [System.Collections.Generic.List[string]]::new()
+    $inLocations = $false
+    foreach ($line in ($raw -split "`r?`n")) {
+        if ($line -match '^\[Locations\]\s*$')  { $inLocations = $true; continue }
+        if ($inLocations -and $line -match '^\[') { $inLocations = $false }
+        if (-not $inLocations) { $filtered.Add($line) }
+    }
+    [System.IO.File]::WriteAllText($globalIni, ($filtered -join "`r`n"), [System.Text.Encoding]::UTF8)
+}
 
-[Basic]
-Profile=Umpire Coder
-ProfileDir=Umpire Coder
-SceneCollection=Umpire Coder
-SceneCollectionFile=Umpire Coder
-
-[OBSWebSocket]
-ServerEnabled=true
-ServerPort=4455
-AuthRequired=true
-ServerPassword=$OBS_PASSWORD
-AlertsEnabled=false
-"@, [System.Text.Encoding]::UTF8)
+Set-IniValue $globalIni "Basic"        "Profile"             "Umpire Coder"
+Set-IniValue $globalIni "Basic"        "ProfileDir"          "Umpire Coder"
+Set-IniValue $globalIni "Basic"        "SceneCollection"     "Umpire Coder"
+Set-IniValue $globalIni "Basic"        "SceneCollectionFile" "Umpire Coder"
+Set-IniValue $globalIni "OBSWebSocket" "ServerEnabled"       "true"
+Set-IniValue $globalIni "OBSWebSocket" "ServerPort"          "4455"
+Set-IniValue $globalIni "OBSWebSocket" "AuthRequired"        "true"
+Set-IniValue $globalIni "OBSWebSocket" "ServerPassword"      $OBS_PASSWORD
+Set-IniValue $globalIni "OBSWebSocket" "AlertsEnabled"       "false"
 
 # basic.ini -- write fresh. SampleRate and ChannelSetup are required for OBS
 # to treat the [Audio] section as valid; without them it ignores the section
