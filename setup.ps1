@@ -171,19 +171,28 @@ $obsExe = $obsPaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 # overwrites any settings we wrote beforehand. By letting OBS init first,
 # killing it, then patching global.ini, we guarantee our settings are the
 # last thing written and OBS's own migration flags stay intact.
-Write-Info "Starting OBS to complete initialisation (this takes ~15 seconds)..."
+Write-Info "Starting OBS to complete initialisation -- waiting for it to open..."
 if ($obsExe) {
-    $obsProc = Start-Process $obsExe -WorkingDirectory (Split-Path $obsExe) -PassThru
-    # Wait for global.ini to appear (up to 20 s), then give OBS a few more
-    # seconds to finish writing all its initial config files before we kill it.
-    $deadline = (Get-Date).AddSeconds(20)
-    while (-not (Test-Path $globalIni) -and (Get-Date) -lt $deadline) {
-        Start-Sleep -Milliseconds 500
+    Start-Process $obsExe -WorkingDirectory (Split-Path $obsExe)
+
+    # Wait until obs64 process is running (launch can take 30+ s on a new machine)
+    $deadline = (Get-Date).AddSeconds(120)
+    while ((Get-Date) -lt $deadline) {
+        $running = Get-Process "obs64","obs32" -ErrorAction SilentlyContinue
+        if ($running) { break }
+        Start-Sleep -Seconds 2
     }
-    Start-Sleep -Seconds 6
-    $obsProc | Stop-Process -Force -ErrorAction SilentlyContinue
-    Get-Process "obs64","obs32" -ErrorAction SilentlyContinue | Stop-Process -Force
-    Start-Sleep -Seconds 2
+
+    if (-not (Get-Process "obs64","obs32" -ErrorAction SilentlyContinue)) {
+        Write-Host "  WARNING: OBS did not start within 2 minutes." -ForegroundColor Yellow
+    } else {
+        Write-Info "OBS is running -- waiting for it to finish writing config..."
+        # Give OBS time to complete migration and write all its initial files
+        Start-Sleep -Seconds 8
+        Get-Process "obs64","obs32" -ErrorAction SilentlyContinue | Stop-Process -Force
+        Start-Sleep -Seconds 2
+        Write-Info "OBS initialised."
+    }
 }
 
 foreach ($d in @($obsConfig, $profileDir, $scenesDir, $recordingPath)) {
