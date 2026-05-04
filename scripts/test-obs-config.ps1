@@ -72,36 +72,32 @@ foreach ($d in @($obsConfig, $profileDir, $scenesDir, $recordingPath)) {
 }
 
 # -- global.ini ---------------------------------------------------------------
+# Write as a complete fresh file. Patching is unreliable because OBS appends
+# its own keys on close (including a [Locations] section that overrides where
+# OBS looks for profiles and scene collections). Writing fresh guarantees only
+# the keys we want are present and [Locations] cannot interfere.
 Write-Host ""
-Write-Host "Writing global.ini..." -ForegroundColor Cyan
+Write-Host "Writing global.ini (fresh)..." -ForegroundColor Cyan
 
-Set-IniValue $globalIni "General"      "LastVersion"         "30030000"
-Set-IniValue $globalIni "OBSWebSocket" "ServerEnabled"       "true"
-Set-IniValue $globalIni "OBSWebSocket" "ServerPort"          "4455"
-Set-IniValue $globalIni "OBSWebSocket" "AuthRequired"        "true"
-Set-IniValue $globalIni "OBSWebSocket" "ServerPassword"      $OBS_PASSWORD
-Set-IniValue $globalIni "OBSWebSocket" "AlertsEnabled"       "false"
-Set-IniValue $globalIni "Basic"        "Profile"             "Umpire Coder"
-Set-IniValue $globalIni "Basic"        "ProfileDir"          "Umpire Coder"
-Set-IniValue $globalIni "Basic"        "SceneCollection"     "Umpire Coder"
-Set-IniValue $globalIni "Basic"        "SceneCollectionFile" "Umpire Coder"
-# Fix [Locations] section -- OBS uses this (not [Basic]) to resolve where profiles
-# and scene collections live.
-#
-# How OBS uses [Locations]:
-#   Configuration      -- OBS appends "\obs-studio" to this, so the correct value
-#                         is AppData\Roaming (NOT AppData\Roaming\obs-studio).
-#   Profiles           -- direct path; OBS appends the profile dir name to it.
-#   SceneCollections   -- direct path; OBS appends the scene file name to it.
-#   PluginManagerSettings -- direct path for plugin manager settings.
-#
-# A previous test run accidentally set Configuration=obs-studio (one level too deep),
-# which caused "Failed to initialize global config". Restore it to the correct parent.
-Set-IniValue $globalIni "Locations"    "Configuration"       $env:APPDATA
-Set-IniValue $globalIni "Locations"    "Profiles"            (Join-Path $obsConfig "basic\profiles")
-Set-IniValue $globalIni "Locations"    "SceneCollections"    (Join-Path $obsConfig "basic\scenes")
-Set-IniValue $globalIni "Locations"    "PluginManagerSettings" $env:APPDATA
+$globalIniContent = @"
+[General]
+LastVersion=30030000
 
+[Basic]
+Profile=Umpire Coder
+ProfileDir=Umpire Coder
+SceneCollection=Umpire Coder
+SceneCollectionFile=Umpire Coder
+
+[OBSWebSocket]
+ServerEnabled=true
+ServerPort=4455
+AuthRequired=true
+ServerPassword=$OBS_PASSWORD
+AlertsEnabled=false
+"@
+
+[System.IO.File]::WriteAllText($globalIni, $globalIniContent, [System.Text.Encoding]::UTF8)
 Write-Host "  $globalIni" -ForegroundColor DarkGray
 
 # -- profile basic.ini ---------------------------------------------------------
