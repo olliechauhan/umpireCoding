@@ -82,6 +82,7 @@ Write-Host "Writing global.ini (fresh)..." -ForegroundColor Cyan
 $globalIniContent = @"
 [General]
 LastVersion=30030000
+Pre31Migrated=true
 
 [Basic]
 Profile=Umpire Coder
