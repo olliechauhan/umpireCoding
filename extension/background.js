@@ -143,11 +143,19 @@ async function handle(message) {
         }
         await obs.startRecording();
       } catch (err) {
-        const msg = `OBS launched but could not connect to its WebSocket server. Check that the WebSocket server is enabled in OBS → Tools → WebSocket Server Settings. (${err.message})`;
+        let msg;
+        if (/requires a password/i.test(err.message)) {
+          msg = 'No OBS WebSocket password is set. Go to Umpire Coder Settings → OBS Connection and enter the password shown in OBS → Tools → WebSocket Server Settings.';
+        } else if (/authentication failed|code 4009/i.test(err.message)) {
+          msg = `OBS rejected the connection — wrong password. Check the password in Umpire Coder Settings matches OBS → Tools → WebSocket Server Settings. (${err.message})`;
+        } else {
+          msg = `OBS launched but WebSocket connection failed. Make sure the WebSocket server is enabled in OBS → Tools → WebSocket Server Settings, and the password in Umpire Coder Settings is correct. (${err.message})`;
+        }
         chrome.notifications.create('obs-error', {
           type: 'basic', iconUrl: '../icons/icon48.png',
           title: 'Umpire Coder — OBS Error', message: msg,
         });
+        await chrome.storage.local.set({ pendingObsError: msg });
         return { obsError: true, canRetry: true, errorMessage: msg };
       }
 

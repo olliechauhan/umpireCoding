@@ -7,6 +7,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Show any error that occurred after the popup closed (e.g. OBS stole focus
+  // mid-launch so the user couldn't see the inline error message).
+  const { pendingObsError } = await chrome.storage.local.get('pendingObsError');
+  if (pendingObsError) {
+    await chrome.storage.local.remove('pendingObsError');
+    showError(pendingObsError);
+  }
+
   // ── Setup form ───────────────────────────────────────────────────────────────
 
   document.getElementById('settings-btn').addEventListener('click', openSettings);
