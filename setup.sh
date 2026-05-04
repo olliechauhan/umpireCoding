@@ -446,44 +446,7 @@ ok "WebSocket enabled  (port 4455, password: $OBS_PASSWORD)"
 ok "Recording path set ($RECORDING_DIR)"
 ok "Scene 'Match Recording' created  (Stream Capture + Mic/Aux muted)"
 
-# Open Chrome first so it is visible before OBS launches
-if [ -d "/Applications/Google Chrome.app" ]; then
-    open -a "Google Chrome" --args --new-window "https://www.google.com"
-    info "Chrome opened - waiting for its window to appear..."
-    sleep 6
-else
-    printf "\n  \033[33mCould not find Chrome. Please open it manually, then press Enter.\033[0m\n"
-    read -r
-fi
-
-# Launch OBS with the pre-configured profile and scene collection
-if [ -d "/Applications/OBS.app" ]; then
-    /Applications/OBS.app/Contents/MacOS/OBS \
-        --profile "Umpire Coder" \
-        --collection "Umpire Coder" &>/dev/null &
-    info "OBS is loading - waiting for it to be ready..."
-    for _ in $(seq 1 30); do
-        pgrep -x "OBS" >/dev/null 2>&1 && break
-        sleep 1
-    done
-    sleep 5
-    ok "OBS is ready."
-else
-    printf "\n  \033[33mCould not find OBS - please open it manually.\033[0m\n"
-fi
-
-printf "\n"
-printf "  \033[1mMANUAL ACTION - Select Chrome in OBS:\033[0m\n"
-printf "  --------------------------------------\n"
-printf "\n"
-printf "  In OBS (wait for it to fully load before doing this):\n"
-printf "    1. In the Sources panel, double-click  Stream Capture\n"
-printf "    2. Click the Window dropdown and select your Chrome window\n"
-printf "       (it will appear as something like  Google Chrome - New Tab)\n"
-printf "    3. Click OK\n"
-printf "\n"
-printf "  Press Enter once you have selected your Chrome window and clicked OK"
-read -r
+ok "OBS configured. Open it from your Dock before starting a match — the extension sets the capture source automatically."
 
 # ---------------------------------------------------------------------------
 # Step 8: Chrome extension + native host registration

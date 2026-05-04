@@ -17,8 +17,7 @@ Follow every step in order. If something goes wrong, read the **Troubleshooting*
 
 The setup script handles everything automatically: installs Homebrew, Node.js, Git, OBS Studio and ffmpeg, downloads Umpire Coder, configures OBS (WebSocket, recording folder, window capture source), and registers the native messaging host.
 
-There are two short manual actions the script will guide you through:
-- **Selecting your Chrome window in OBS** — the script opens Chrome in the background so it appears in the OBS source list
+There is one short manual action the script will guide you through:
 - **Loading the extension into Chrome** — Chrome's security model prevents this being automated; the script opens Chrome and the extension folder for you
 
 ### How to run it
@@ -32,8 +31,7 @@ bash <(curl -fsSL https://raw.githubusercontent.com/olliechauhan/umpireCoding/ma
 
 3. You may be asked for your Mac password during the Homebrew installation — type it and press Enter (you won't see the characters as you type, that's normal)
 4. Press **Enter** when prompted to begin and follow the on-screen instructions
-5. When the script asks you to select a Chrome window in OBS — in OBS, double-click **Stream Capture** in the Sources panel, choose your Chrome window from the dropdown, and click **OK**
-6. When the script asks you to load the extension — follow the instructions on screen (Chrome and the extension folder will already be open)
+5. When the script asks you to load the extension — follow the instructions on screen (Chrome and the extension folder will already be open)
 
 > **Tip:** If you already have some of the software installed, the script detects it and skips those steps automatically.
 

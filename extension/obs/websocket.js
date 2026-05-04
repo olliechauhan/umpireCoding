@@ -176,7 +176,8 @@ export class OBSWebSocket {
         } catch { continue; }
 
         const chromeWindows = propertyItems.filter(w =>
-          w.itemValue?.toLowerCase().includes('chrome.exe') ||
+          w.itemValue?.toLowerCase().includes('chrome.exe') ||   // Windows
+          w.itemValue?.toLowerCase().includes('google chrome') || // macOS
           w.itemName?.toLowerCase().includes('chrome')
         );
         if (!chromeWindows.length) continue;
