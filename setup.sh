@@ -129,7 +129,13 @@ fi
 # ---------------------------------------------------------------------------
 
 step "4/8" "ffmpeg"
-brew_install "ffmpeg" "ffmpeg"
+if command -v ffmpeg &>/dev/null; then
+    skip "ffmpeg already installed ($(ffmpeg -version 2>&1 | head -1 | awk '{print $3}'))."
+else
+    info "ffmpeg has many dependencies -- this step may take several minutes."
+    brew install ffmpeg
+    ok "ffmpeg installed."
+fi
 
 # ---------------------------------------------------------------------------
 # Step 5: Clone / update repo
