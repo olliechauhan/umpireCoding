@@ -483,21 +483,20 @@ Write-Step "8/8" "Chrome extension + native host registration"
 Write-Host ""
 Write-Host "  Chrome cannot load extensions automatically - you need to do this part." -ForegroundColor White
 Write-Host ""
-Write-Host "  We've opened Chrome and the extension folder for you." -ForegroundColor White
-Write-Host ""
 Write-Host "  Follow these steps:"
-Write-Host "    1. In Chrome, turn on Developer mode (toggle, top-right corner)"
-Write-Host "    2. Click  Load unpacked"
-Write-Host "    3. The file browser should already show the extension folder."
-Write-Host "       If not, navigate to:"
+Write-Host ""
+Write-Host "    1. Click on Chrome in your taskbar to bring it up"
+Write-Host "    2. In the address bar, type:" -NoNewline
+Write-Host "  chrome://extensions" -ForegroundColor Cyan
+Write-Host "       and press Enter"
+Write-Host "    3. Turn on Developer mode (toggle, top-right corner)"
+Write-Host "    4. Click  Load unpacked"
+Write-Host "    5. In the file browser, navigate to:"
 Write-Host "         $INSTALL_DIR\extension" -ForegroundColor Cyan
-Write-Host "    4. Click  Select Folder"
-Write-Host "    5. Copy the 32-character Extension ID shown under the extension name"
+Write-Host "       and click  Select Folder"
+Write-Host "    6. Copy the 32-character Extension ID shown under the extension name"
 Write-Host ""
 
-try { & $chromeExe "chrome://extensions" } catch {
-    try { & "chrome.exe" "chrome://extensions" } catch {}
-}
 Start-Process "explorer.exe" -ArgumentList (Join-Path $INSTALL_DIR "extension")
 
 Write-Host "  Once you have the Extension ID, come back here." -ForegroundColor White
