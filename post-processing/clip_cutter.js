@@ -185,8 +185,12 @@ function main() {
       console.log('done');
       ok++;
     } catch (err) {
-      const stderr = err.stderr ? err.stderr.toString().split('\n').pop() : err.message;
-      console.log(`FAILED — ${stderr}`);
+      // Get the last non-empty line from ffmpeg's stderr as a summary, then
+      // write the full stderr to process.stderr so the host can log it.
+      const stderrFull = err.stderr ? err.stderr.toString() : '';
+      const lastLine   = stderrFull.trim().split('\n').filter(Boolean).pop() || err.message;
+      console.log(`FAILED — ${lastLine}`);
+      if (stderrFull) process.stderr.write(`ffmpeg stderr for ${filename}:\n${stderrFull}\n`);
       fail++;
     }
   }

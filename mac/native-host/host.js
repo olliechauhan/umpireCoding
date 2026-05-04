@@ -7,7 +7,7 @@
  */
 
 import { execFileSync, spawn } from 'child_process';
-import { appendFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
+import { appendFileSync, existsSync, mkdirSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import net from 'net';
 import { dirname, join, resolve } from 'path';
 import { homedir } from 'os';
@@ -140,6 +140,48 @@ async function launchObs(port, customPath) {
   await waitForPort(port, 20_000);
 }
 
+// ── Video readiness check ─────────────────────────────────────────────────────
+
+/**
+ * OBS writes the moov atom (QuickTime index) at the END of .mov files when
+ * recording stops. StopRecord responds before the file is fully flushed, so
+ * we poll until the file size has been stable for several consecutive checks.
+ * Without this, ffmpeg errors with "moov atom not found".
+ */
+async function waitForVideoReady(filePath, maxWaitMs = 30_000) {
+  const CHECK_INTERVAL = 1_000; // ms between size checks
+  const STABLE_NEEDED  = 3;     // consecutive equal-size checks needed
+  const deadline       = Date.now() + maxWaitMs;
+
+  let lastSize    = -1;
+  let stableCount = 0;
+
+  dbg(`waitForVideoReady: polling ${filePath}`);
+
+  while (Date.now() < deadline) {
+    try {
+      const { size } = statSync(filePath);
+      if (size > 0 && size === lastSize) {
+        stableCount++;
+        dbg(`waitForVideoReady: stable check ${stableCount}/${STABLE_NEEDED} (${size} bytes)`);
+        if (stableCount >= STABLE_NEEDED) {
+          dbg('waitForVideoReady: file is ready');
+          return;
+        }
+      } else {
+        if (size !== lastSize) dbg(`waitForVideoReady: size changed to ${size}`);
+        lastSize    = size;
+        stableCount = 0;
+      }
+    } catch (err) {
+      dbg('waitForVideoReady: stat error — ' + err.message);
+    }
+    await new Promise(r => setTimeout(r, CHECK_INTERVAL));
+  }
+
+  dbg('waitForVideoReady: timed out — proceeding anyway');
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -237,6 +279,10 @@ async function main() {
 
   // ── Clip cutting (only if OBS returned a recording path) ─────────────────
   if (videoPath) {
+    // OBS writes the moov atom at the end of .mov files after stopping.
+    // Wait until the file size has stabilised before handing it to ffmpeg.
+    await waitForVideoReady(videoPath);
+
     try {
       const out = execFileSync(
         NODE,
