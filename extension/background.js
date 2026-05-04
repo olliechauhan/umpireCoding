@@ -87,6 +87,39 @@ async function handle(message) {
 
       const { settings } = await chrome.storage.local.get('settings');
 
+      // Ask the native host to launch OBS (or confirm it's already running).
+      // waitForPort inside the host blocks until the WebSocket is ready, so
+      // a successful response means OBS is definitely ready to accept connections.
+      // To roll back: revert this try/catch block (git show 1ffd756 for prior state).
+      try {
+        const launchResult = await sendNativeMessage('com.umpirecoder.postprocess', {
+          type:       'LAUNCH_OBS',
+          obsPort:    settings.obsPort    || 4455,
+          obsExePath: settings.obsExePath || '',
+        });
+        if (!launchResult.success) {
+          return { obsError: true, canRetry: true, errorMessage: launchResult.error || 'OBS failed to start.' };
+        }
+      } catch (err) {
+        const notInstalled = /not found|not registered/i.test(err.message);
+        if (notInstalled) {
+          const { os } = await chrome.runtime.getPlatformInfo();
+          const setupCmd = os === 'mac'
+            ? 'Run install.sh in the mac/native-host folder'
+            : 'Run install.ps1 in the native-host folder';
+          return {
+            obsError: true,
+            canRetry: false,
+            errorMessage: `The Umpire Coder helper is not set up on this computer. ${setupCmd}, then try again.`,
+          };
+        }
+        return {
+          obsError: true,
+          canRetry: true,
+          errorMessage: `Could not launch OBS: ${err.message}`,
+        };
+      }
+
       const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
       let crop = null;
@@ -113,7 +146,7 @@ async function handle(message) {
         return {
           obsError: true,
           canRetry: true,
-          errorMessage: `Could not connect to OBS — make sure OBS is open with the WebSocket server enabled (OBS → Tools → WebSocket Server Settings). (${err.message})`,
+          errorMessage: `OBS launched but could not connect to its WebSocket server. Check that the WebSocket server is enabled in OBS → Tools → WebSocket Server Settings. (${err.message})`,
         };
       }
 
