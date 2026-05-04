@@ -495,8 +495,8 @@ Write-Host "    4. Click  Select Folder"
 Write-Host "    5. Copy the 32-character Extension ID shown under the extension name"
 Write-Host ""
 
-try { Start-Process $chromeExe -ArgumentList "--new-window chrome://extensions" } catch {
-    try { Start-Process "chrome.exe" -ArgumentList "--new-window chrome://extensions" } catch {}
+try { & $chromeExe "chrome://extensions" } catch {
+    try { & "chrome.exe" "chrome://extensions" } catch {}
 }
 Start-Process "explorer.exe" -ArgumentList (Join-Path $INSTALL_DIR "extension")
 
