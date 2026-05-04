@@ -85,20 +85,38 @@ Set-IniValue $globalIni "Basic"        "Profile"             "Umpire Coder"
 Set-IniValue $globalIni "Basic"        "ProfileDir"          "Umpire Coder"
 Set-IniValue $globalIni "Basic"        "SceneCollection"     "Umpire Coder"
 Set-IniValue $globalIni "Basic"        "SceneCollectionFile" "Umpire Coder"
+# Ensure OBS looks for profiles/scenes in the standard AppData locations.
+# A previous OBS run may have written these pointing at AppData\Roaming directly
+# (missing the obs-studio\basic\... sub-path), which causes OBS to ignore our profile.
+Set-IniValue $globalIni "Basic"        "Profiles"            (Join-Path $obsConfig "basic\profiles")
+Set-IniValue $globalIni "Basic"        "SceneCollections"    (Join-Path $obsConfig "basic\scenes")
 
 Write-Host "  $globalIni" -ForegroundColor DarkGray
 
 # -- profile basic.ini ---------------------------------------------------------
-Write-Host "Writing profile basic.ini..." -ForegroundColor Cyan
+# Write as a complete fresh file so there is no stale content OBS could
+# misread. Patching leaves the risk of duplicate keys or wrong section order.
+Write-Host "Writing profile basic.ini (fresh)..." -ForegroundColor Cyan
 
-Set-IniValue $profileIni "Output"       "Mode"           "Simple"
-Set-IniValue $profileIni "SimpleOutput" "FilePath"       $recordingPath
-Set-IniValue $profileIni "Audio"        "DesktopDevice1" "default"
-Set-IniValue $profileIni "Audio"        "DesktopDevice2" "disabled"
-Set-IniValue $profileIni "Audio"        "AuxDevice1"     "default"
-Set-IniValue $profileIni "Audio"        "AuxDevice2"     "disabled"
-Set-IniValue $profileIni "Audio"        "AuxDevice3"     "disabled"
-Set-IniValue $profileIni "Audio"        "AuxDevice4"     "disabled"
+$basicIniContent = @"
+[Output]
+Mode=Simple
+
+[SimpleOutput]
+FilePath=$recordingPath
+
+[Audio]
+DesktopDevice1=default
+DesktopDevice2=disabled
+AuxDevice1=default
+AuxDevice2=disabled
+AuxDevice3=disabled
+AuxDevice4=disabled
+MonitoringDeviceId=default
+MonitoringDeviceName=
+"@
+
+[System.IO.File]::WriteAllText($profileIni, $basicIniContent, [System.Text.Encoding]::UTF8)
 
 # Diagnostic -- print file contents so we can verify the writes
 Write-Host "  $profileIni" -ForegroundColor DarkGray
@@ -107,9 +125,9 @@ Write-Host "  --- basic.ini contents ---" -ForegroundColor DarkGray
 Get-Content $profileIni | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
 Write-Host "  --------------------------" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "  --- global.ini [Basic] + [OBSWebSocket] ---" -ForegroundColor DarkGray
-Get-Content $globalIni | Select-String "SceneCollection|Profile|ServerEnabled|ServerPassword" | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
-Write-Host "  -------------------------------------------" -ForegroundColor DarkGray
+Write-Host "  --- global.ini (full) ---" -ForegroundColor DarkGray
+Get-Content $globalIni | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+Write-Host "  -------------------------" -ForegroundColor DarkGray
 
 # -- scene collection JSON -----------------------------------------------------
 Write-Host "Writing scene collection JSON..." -ForegroundColor Cyan
