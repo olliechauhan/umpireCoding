@@ -85,11 +85,13 @@ Set-IniValue $globalIni "Basic"        "Profile"             "Umpire Coder"
 Set-IniValue $globalIni "Basic"        "ProfileDir"          "Umpire Coder"
 Set-IniValue $globalIni "Basic"        "SceneCollection"     "Umpire Coder"
 Set-IniValue $globalIni "Basic"        "SceneCollectionFile" "Umpire Coder"
-# Ensure OBS looks for profiles/scenes in the standard AppData locations.
-# A previous OBS run may have written these pointing at AppData\Roaming directly
-# (missing the obs-studio\basic\... sub-path), which causes OBS to ignore our profile.
-Set-IniValue $globalIni "Basic"        "Profiles"            (Join-Path $obsConfig "basic\profiles")
-Set-IniValue $globalIni "Basic"        "SceneCollections"    (Join-Path $obsConfig "basic\scenes")
+# Fix [Locations] section -- OBS uses this (not [Basic]) to resolve where profiles
+# and scene collections live. A previous OBS run wrote these pointing at AppData\Roaming
+# directly, so OBS was looking in the wrong folder and falling back to all-disabled defaults.
+Set-IniValue $globalIni "Locations"    "Configuration"       $obsConfig
+Set-IniValue $globalIni "Locations"    "Profiles"            (Join-Path $obsConfig "basic\profiles")
+Set-IniValue $globalIni "Locations"    "SceneCollections"    (Join-Path $obsConfig "basic\scenes")
+Set-IniValue $globalIni "Locations"    "PluginManagerSettings" $obsConfig
 
 Write-Host "  $globalIni" -ForegroundColor DarkGray
 
