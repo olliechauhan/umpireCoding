@@ -98,8 +98,18 @@ Set-IniValue $profileIni "Audio"        "DesktopDevice2" "disabled"
 Set-IniValue $profileIni "Audio"        "AuxDevice1"     "default"
 Set-IniValue $profileIni "Audio"        "AuxDevice2"     "disabled"
 Set-IniValue $profileIni "Audio"        "AuxDevice3"     "disabled"
+Set-IniValue $profileIni "Audio"        "AuxDevice4"     "disabled"
 
+# Diagnostic -- print file contents so we can verify the writes
 Write-Host "  $profileIni" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "  --- basic.ini contents ---" -ForegroundColor DarkGray
+Get-Content $profileIni | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+Write-Host "  --------------------------" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "  --- global.ini [Basic] + [OBSWebSocket] ---" -ForegroundColor DarkGray
+Get-Content $globalIni | Select-String "SceneCollection|Profile|ServerEnabled|ServerPassword" | ForEach-Object { Write-Host "  $_" -ForegroundColor DarkGray }
+Write-Host "  -------------------------------------------" -ForegroundColor DarkGray
 
 # -- scene collection JSON -----------------------------------------------------
 Write-Host "Writing scene collection JSON..." -ForegroundColor Cyan
