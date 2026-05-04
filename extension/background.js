@@ -143,11 +143,12 @@ async function handle(message) {
         }
         await obs.startRecording();
       } catch (err) {
-        return {
-          obsError: true,
-          canRetry: true,
-          errorMessage: `OBS launched but could not connect to its WebSocket server. Check that the WebSocket server is enabled in OBS → Tools → WebSocket Server Settings. (${err.message})`,
-        };
+        const msg = `OBS launched but could not connect to its WebSocket server. Check that the WebSocket server is enabled in OBS → Tools → WebSocket Server Settings. (${err.message})`;
+        chrome.notifications.create('obs-error', {
+          type: 'basic', iconUrl: '../icons/icon48.png',
+          title: 'Umpire Coder — OBS Error', message: msg,
+        });
+        return { obsError: true, canRetry: true, errorMessage: msg };
       }
 
       return startMatchAndInjectOverlay(message.matchData);
