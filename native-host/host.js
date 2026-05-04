@@ -162,7 +162,9 @@ async function launchObs(port, customPath) {
   if (process.platform === 'darwin') {
     spawn('open', [obsPath], { detached: true, stdio: 'ignore' }).unref();
   } else {
-    spawn(obsPath, [], { detached: true, stdio: 'ignore', cwd: dirname(obsPath) }).unref();
+    // --minimize-to-tray prevents OBS from stealing Chrome focus (which would
+    // close the extension popup before the match can start).
+    spawn(obsPath, ['--minimize-to-tray'], { detached: true, stdio: 'ignore', cwd: dirname(obsPath) }).unref();
   }
 
   await waitForPort(port, 20_000);
