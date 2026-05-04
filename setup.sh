@@ -125,23 +125,10 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Step 4: ffmpeg
+# Step 4: Clone / update repo
 # ---------------------------------------------------------------------------
 
-step "4/8" "ffmpeg"
-if command -v ffmpeg &>/dev/null; then
-    skip "ffmpeg already installed ($(ffmpeg -version 2>&1 | head -1 | awk '{print $3}'))."
-else
-    info "ffmpeg has many dependencies -- this step may take several minutes."
-    brew install ffmpeg
-    ok "ffmpeg installed."
-fi
-
-# ---------------------------------------------------------------------------
-# Step 5: Clone / update repo
-# ---------------------------------------------------------------------------
-
-step "5/8" "Umpire Coder files"
+step "4/8" "Umpire Coder files"
 if [ -d "$INSTALL_DIR/.git" ]; then
     info "Repository already exists at $INSTALL_DIR"
     info "Pulling latest updates..."
@@ -152,6 +139,26 @@ else
     git clone "$REPO_URL" "$INSTALL_DIR" --quiet
     ok "Files downloaded."
 fi
+
+# ---------------------------------------------------------------------------
+# Step 5: ffmpeg (static binary from evermeet.cx)
+# ---------------------------------------------------------------------------
+
+step "5/8" "ffmpeg"
+FFMPEG_BIN="$INSTALL_DIR/bin/ffmpeg"
+if [ -x "$FFMPEG_BIN" ]; then
+    skip "ffmpeg already downloaded."
+else
+    mkdir -p "$INSTALL_DIR/bin"
+    info "Downloading ffmpeg static build..."
+    curl -fsSL "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip" -o /tmp/ffmpeg-mac.zip
+    unzip -q -o /tmp/ffmpeg-mac.zip -d "$INSTALL_DIR/bin"
+    rm -f /tmp/ffmpeg-mac.zip
+    chmod +x "$FFMPEG_BIN"
+    xattr -d com.apple.quarantine "$FFMPEG_BIN" 2>/dev/null || true
+    ok "ffmpeg downloaded."
+fi
+export PATH="$INSTALL_DIR/bin:$PATH"
 
 # ---------------------------------------------------------------------------
 # Step 6: npm install
@@ -544,5 +551,5 @@ printf "         Recording folder     :  %s\n" "$RECORDING_DIR"
 printf "         Clips & reports folder  :  (choose any folder you like)\n"
 printf "    3. Click Save Settings\n"
 printf "\n"
-printf "  See mac/macSETUP.md for the full workflow guide.\n"
+printf "  See macSETUP.md for the full workflow guide.\n"
 printf "\n"

@@ -3,6 +3,11 @@
 # Searches common node locations because Chrome uses a restricted PATH
 # that does not include Homebrew's bin directories.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Prepend repo bin dir so ffmpeg (downloaded by setup.sh) is findable
+# even inside Chrome's restricted PATH environment.
+export PATH="$INSTALL_DIR/bin:$PATH"
 
 for dir in \
   /usr/local/bin \
