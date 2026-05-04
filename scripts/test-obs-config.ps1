@@ -114,6 +114,8 @@ Mode=Simple
 FilePath=$recordingPath
 
 [Audio]
+SampleRate=48000
+ChannelSetup=Stereo
 DesktopDevice1=default
 DesktopDevice2=disabled
 AuxDevice1=default
@@ -136,6 +138,8 @@ Write-Host "Writing profile user.ini (fresh)..." -ForegroundColor Cyan
 $userIniPath = Join-Path $profileDir "user.ini"
 $userIniContent = @"
 [Audio]
+SampleRate=48000
+ChannelSetup=Stereo
 DesktopDevice1=default
 DesktopDevice2=disabled
 AuxDevice1=default
@@ -266,7 +270,7 @@ $sceneJson = @"
             "push-to-mute-delay": 0,
             "push-to-talk-delay": 0,
             "settings": {
-                "id_counter": 1,
+                "id_counter": 3,
                 "items": [
                     {
                         "align": 5,
@@ -281,6 +285,48 @@ $sceneJson = @"
                         "id": 1,
                         "locked": false,
                         "name": "Stream Capture",
+                        "pos": {"x": 0.0, "y": 0.0},
+                        "private_settings": {},
+                        "rot": 0.0,
+                        "scale": {"x": 1.0, "y": 1.0},
+                        "scale_filter": "disable",
+                        "show_in_multiview": true,
+                        "visible": true
+                    },
+                    {
+                        "align": 5,
+                        "bounds": {"x": 0.0, "y": 0.0},
+                        "bounds_align": 0,
+                        "bounds_type": 0,
+                        "crop_bottom": 0,
+                        "crop_left": 0,
+                        "crop_right": 0,
+                        "crop_top": 0,
+                        "group_item_backup": false,
+                        "id": 2,
+                        "locked": true,
+                        "name": "Desktop Audio",
+                        "pos": {"x": 0.0, "y": 0.0},
+                        "private_settings": {},
+                        "rot": 0.0,
+                        "scale": {"x": 1.0, "y": 1.0},
+                        "scale_filter": "disable",
+                        "show_in_multiview": true,
+                        "visible": true
+                    },
+                    {
+                        "align": 5,
+                        "bounds": {"x": 0.0, "y": 0.0},
+                        "bounds_align": 0,
+                        "bounds_type": 0,
+                        "crop_bottom": 0,
+                        "crop_left": 0,
+                        "crop_right": 0,
+                        "crop_top": 0,
+                        "group_item_backup": false,
+                        "id": 3,
+                        "locked": true,
+                        "name": "Mic/Aux",
                         "pos": {"x": 0.0, "y": 0.0},
                         "private_settings": {},
                         "rot": 0.0,
