@@ -189,6 +189,27 @@ async function waitForVideoReady(filePath, maxWaitMs = 30_000) {
   dbg('waitForVideoReady: timed out — proceeding anyway');
 }
 
+// Wait until a file's size stops changing — OBS finalises MP4 after stop,
+// so clip_cutter must not run until the moov atom has been written.
+async function waitForFileReady(filePath, stabiliseMs = 2000, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastSize = -1;
+  let stableFor = 0;
+  while (Date.now() < deadline) {
+    try {
+      const { size } = statSync(filePath);
+      if (size === lastSize) {
+        stableFor += 500;
+        if (stableFor >= stabiliseMs) return;
+      } else {
+        stableFor = 0;
+        lastSize = size;
+      }
+    } catch { /* file not yet visible — keep waiting */ }
+    await new Promise(r => setTimeout(r, 500));
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {

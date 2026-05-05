@@ -7,7 +7,7 @@
  */
 
 import { execFileSync, spawn } from 'child_process';
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, statSync, unlinkSync, writeFileSync } from 'fs';
 import net from 'net';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
@@ -184,6 +184,27 @@ if ($p -and $p.MainWindowHandle -ne 0) {
   } catch { /* non-fatal — window minimize is best-effort */ }
 }
 
+// Wait until a file's size stops changing — OBS finalises MP4 after stop,
+// so clip_cutter must not run until the moov atom has been written.
+async function waitForFileReady(filePath, stabiliseMs = 2000, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs;
+  let lastSize = -1;
+  let stableFor = 0;
+  while (Date.now() < deadline) {
+    try {
+      const { size } = statSync(filePath);
+      if (size === lastSize) {
+        stableFor += 500;
+        if (stableFor >= stabiliseMs) return;
+      } else {
+        stableFor = 0;
+        lastSize = size;
+      }
+    } catch { /* file not yet visible — keep waiting */ }
+    await new Promise(r => setTimeout(r, 500));
+  }
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -300,6 +321,7 @@ async function main() {
 
   // ── Clip cutting (only if OBS returned a recording path) ─────────────────
   if (videoPath) {
+    await waitForFileReady(resolve(videoPath));
     try {
       const out = execFileSync(
         NODE,
