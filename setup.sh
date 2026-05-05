@@ -501,6 +501,7 @@ cat > "$UC_HOST_SH" <<'HOSTEOF'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export UC_POST_DIR="$SCRIPT_DIR/../post-processing"
 export UC_LOG="$SCRIPT_DIR/debug.log"
+export UC_REPO_DIR="__UC_REPO_DIR__"
 [ -d "$SCRIPT_DIR/../bin" ] && export PATH="$SCRIPT_DIR/../bin:$PATH"
 [ -f "$SCRIPT_DIR/../bin/ffmpeg" ] && export UC_FFMPEG_PATH="$SCRIPT_DIR/../bin/ffmpeg"
 for dir in /usr/local/bin /opt/homebrew/bin /opt/homebrew/opt/node/bin \
@@ -509,6 +510,7 @@ for dir in /usr/local/bin /opt/homebrew/bin /opt/homebrew/opt/node/bin \
 done
 exec node "$SCRIPT_DIR/host.js"
 HOSTEOF
+sed -i '' "s|__UC_REPO_DIR__|$INSTALL_DIR|g" "$UC_HOST_SH"
 chmod +x "$UC_HOST_SH"
 
 mkdir -p "$CHROME_HOSTS_DIR"

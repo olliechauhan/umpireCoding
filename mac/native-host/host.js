@@ -237,7 +237,10 @@ async function main() {
 
   if (msg.type === 'GIT_PULL') {
     try {
-      const repoDir = join(__dirname, '..', '..');
+      // UC_REPO_DIR is set by host.sh when running from ~/.umpire-coder.
+      // Falls back to two levels up (mac/native-host → mac → repo root) for dev use.
+      const repoDir = process.env.UC_REPO_DIR || join(__dirname, '..', '..');
+
       // /bin/sh is always present on macOS regardless of Chrome's restricted PATH.
       // The shell finds git via the user's full PATH (Homebrew, Xcode CLI tools, etc.).
       const stdout = execFileSync('/bin/sh', ['-c', 'git pull'], {
@@ -245,6 +248,27 @@ async function main() {
       });
       const upToDate = stdout.includes('Already up to date');
       dbg('GIT_PULL success upToDate=' + upToDate);
+
+      // When running from the deployed location (~/.umpire-coder) and there were
+      // updates, sync the changed files from the repo into ~/.umpire-coder so the
+      // running host picks them up on next invocation.
+      if (!upToDate && process.env.UC_REPO_DIR) {
+        const ucDir = dirname(__dirname); // ~/.umpire-coder
+        const syncCmd = [
+          `cp "${repoDir}/mac/native-host/host.js" "${ucDir}/native-host/host.js"`,
+          `cp "${repoDir}/post-processing/clip_cutter.js" "${ucDir}/post-processing/clip_cutter.js"`,
+          `cp "${repoDir}/post-processing/report_generator.js" "${ucDir}/post-processing/report_generator.js"`,
+          `cp "${repoDir}/post-processing/package.json" "${ucDir}/post-processing/package.json"`,
+          `cd "${ucDir}/post-processing" && npm install --silent`,
+        ].join(' && ');
+        try {
+          execFileSync('/bin/sh', ['-c', syncCmd], { encoding: 'utf8', timeout: 60_000 });
+          dbg('GIT_PULL sync to ~/.umpire-coder complete');
+        } catch (syncErr) {
+          dbg('GIT_PULL sync error (non-fatal): ' + syncErr.message);
+        }
+      }
+
       sendMessage({ success: true, upToDate });
     } catch (err) {
       const detail = (err.stdout || err.stderr || '').toString().trim() || err.message;
