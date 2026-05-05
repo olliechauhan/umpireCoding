@@ -17,10 +17,24 @@
 
     <main>
 
+      <!-- ── Sport ────────────────────────────────────────────────────── -->
+      <section class="card">
+        <h2>Sport</h2>
+        <div class="field">
+          <label for="sport">Sport</label>
+          <select id="sport">
+            <option value="field_hockey">Field Hockey</option>
+            <option value="football">Football (Soccer)</option>
+            <option value="rugby_union">Rugby Union</option>
+            <option value="basketball">Basketball</option>
+          </select>
+        </div>
+      </section>
+
       <!-- ── Tag Types ─────────────────────────────────────────────────── -->
       <section class="card">
         <h2>Tag Types</h2>
-        <p class="hint">These appear as buttons in the overlay. Drag to reorder is not yet supported — delete and re-add to reorder.</p>
+        <p class="hint">These appear as buttons in the overlay. Changing the Sport above resets this list to that sport's defaults.</p>
         <div id="tag-list" class="tag-list"></div>
         <div class="add-row">
           <input type="text" id="new-tag" placeholder="New tag type name…" autocomplete="off">

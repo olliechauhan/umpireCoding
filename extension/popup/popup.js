@@ -1,7 +1,34 @@
+const SPORT_DATA = {
+  field_hockey: {
+    name: 'Field Hockey',
+    officials: ['Umpire 1', 'Umpire 2'],
+    tags: ['Positioning', 'Overheads', 'Breakdown', 'Whistle Timing', 'Hitting Ball Away', 'Advantage', 'Player Management', 'Green Card', 'Yellow Card', 'Red Card', 'Presentation', 'Teamwork'],
+  },
+  football: {
+    name: 'Football (Soccer)',
+    officials: ['Referee', 'AR 1', 'AR 2'],
+    tags: ['Offside Decision', 'Foul — Awarded', 'Foul — Missed', 'Advantage Played', 'Yellow Card', 'Red Card', 'Penalty Decision', 'Corner / Goal Kick', 'AR Flag', 'Positioning', 'Communication'],
+  },
+  rugby_union: {
+    name: 'Rugby Union',
+    officials: ['Referee', 'AR 1', 'AR 2'],
+    tags: ['Offside at Ruck', 'Offside at Lineout', 'High Tackle', 'Ruck Infringement', 'Scrum Decision', 'Penalty Awarded', 'Yellow Card', 'Red Card', 'Try Awarded', 'Try Denied', 'Advantage Played', 'Positioning', 'Communication'],
+  },
+  basketball: {
+    name: 'Basketball',
+    officials: ['Referee 1', 'Referee 2', 'Referee 3'],
+    tags: ['Foul Called', 'Foul Missed', 'Travel', 'Double Dribble', 'Out of Bounds', 'Goaltending', 'Technical Foul', 'Free Throw Administration', 'Shot Clock Violation', 'Positioning', 'Communication'],
+  },
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('date').value = new Date().toISOString().slice(0, 10);
 
-  const { matchState } = await msg({ type: 'GET_MATCH_STATE' });
+  const [{ matchState }, { settings }] = await Promise.all([
+    msg({ type: 'GET_MATCH_STATE' }),
+    msg({ type: 'GET_SETTINGS' }),
+  ]);
+
   if (matchState?.active) {
     showActiveScreen(matchState);
     return;
@@ -15,6 +42,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     showError(pendingObsError);
   }
 
+  const sport = settings?.sport ?? 'field_hockey';
+  renderOfficialsFields(sport);
+
   // ── Setup form ───────────────────────────────────────────────────────────────
 
   document.getElementById('settings-btn').addEventListener('click', openSettings);
@@ -22,9 +52,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('setup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    const sportDef = SPORT_DATA[sport] ?? SPORT_DATA.field_hockey;
+    const officials = sportDef.officials.map((role, i) => ({
+      role,
+      name: val(`official-${i}`),
+    }));
+
+    const empty = officials.filter(o => !o.name);
+    if (empty.length > 0) {
+      showError(`Name required for: ${empty.map(o => o.role).join(', ')}`);
+      return;
+    }
+
     const matchData = {
-      umpire1:     val('umpire1'),
-      umpire2:     val('umpire2'),
+      sport,
+      officials,
       team1:       val('team1'),
       team2:       val('team2'),
       date:        val('date'),
@@ -32,14 +75,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       venue:       val('venue'),
     };
 
-    if (!matchData.umpire1 || !matchData.umpire2) {
-      showError('Both umpire names are required.');
-      return;
-    }
-
     await startMatch(matchData);
   });
 });
+
+function renderOfficialsFields(sport) {
+  const sportDef = SPORT_DATA[sport] ?? SPORT_DATA.field_hockey;
+  const container = document.getElementById('officials-fields');
+  container.innerHTML = sportDef.officials.map((role, i) => `
+    <div class="field">
+      <label for="official-${i}">${role}</label>
+      <input type="text" id="official-${i}" placeholder="Full name" autocomplete="off">
+    </div>
+  `).join('');
+}
 
 // ── Start flow ────────────────────────────────────────────────────────────────
 
@@ -74,8 +123,10 @@ function showActiveScreen(matchState) {
 
   const m = matchState.matchData;
   const teams = (m.team1 && m.team2) ? `${m.team1} v ${m.team2}\n` : '';
+  const officialsStr = (m.officials || []).map(o => o.name).filter(Boolean).join(' & ')
+    || `${m.umpire1 || ''} & ${m.umpire2 || ''}`.trim();
   document.getElementById('active-meta').textContent =
-    `${teams}${m.umpire1} & ${m.umpire2}\n${m.competition || ''} ${m.venue ? '· ' + m.venue : ''}`.trim();
+    `${teams}${officialsStr}\n${m.competition || ''} ${m.venue ? '· ' + m.venue : ''}`.trim();
 
   document.getElementById('settings-btn').addEventListener('click', openSettings);
   bindUpdateBtn();

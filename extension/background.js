@@ -10,20 +10,28 @@ chrome.windows.onRemoved.addListener((windowId) => {
   if (windowId === overlayWindowId) overlayWindowId = null;
 });
 
-const DEFAULT_TAG_TYPES = [
-  'Positioning',
-  'Overheads',
-  'Breakdown',
-  'Whistle Timing',
-  'Hitting Ball Away',
-  'Advantage',
-  'Player Management',
-  'Green Card',
-  'Yellow Card',
-  'Red Card',
-  'Presentation',
-  'Teamwork',
-];
+const SPORT_DATA = {
+  field_hockey: {
+    name: 'Field Hockey',
+    officials: ['Umpire 1', 'Umpire 2'],
+    tags: ['Positioning', 'Overheads', 'Breakdown', 'Whistle Timing', 'Hitting Ball Away', 'Advantage', 'Player Management', 'Green Card', 'Yellow Card', 'Red Card', 'Presentation', 'Teamwork'],
+  },
+  football: {
+    name: 'Football (Soccer)',
+    officials: ['Referee', 'AR 1', 'AR 2'],
+    tags: ['Offside Decision', 'Foul — Awarded', 'Foul — Missed', 'Advantage Played', 'Yellow Card', 'Red Card', 'Penalty Decision', 'Corner / Goal Kick', 'AR Flag', 'Positioning', 'Communication'],
+  },
+  rugby_union: {
+    name: 'Rugby Union',
+    officials: ['Referee', 'AR 1', 'AR 2'],
+    tags: ['Offside at Ruck', 'Offside at Lineout', 'High Tackle', 'Ruck Infringement', 'Scrum Decision', 'Penalty Awarded', 'Yellow Card', 'Red Card', 'Try Awarded', 'Try Denied', 'Advantage Played', 'Positioning', 'Communication'],
+  },
+  basketball: {
+    name: 'Basketball',
+    officials: ['Referee 1', 'Referee 2', 'Referee 3'],
+    tags: ['Foul Called', 'Foul Missed', 'Travel', 'Double Dribble', 'Out of Bounds', 'Goaltending', 'Technical Foul', 'Free Throw Administration', 'Shot Clock Violation', 'Positioning', 'Communication'],
+  },
+};
 
 const DEFAULT_SETTINGS = {
   obsHost: 'localhost',
@@ -36,7 +44,8 @@ const DEFAULT_SETTINGS = {
   obsFramerate: 30,
   clipOutputDirectory: '',
   cropOverlayMargin: 200,
-  tagTypes: DEFAULT_TAG_TYPES,
+  sport: 'field_hockey',
+  tagTypes: SPORT_DATA.field_hockey.tags,
 };
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
@@ -45,6 +54,8 @@ chrome.runtime.onInstalled.addListener(async () => {
   const { settings } = await chrome.storage.local.get('settings');
   if (!settings) {
     await chrome.storage.local.set({ settings: DEFAULT_SETTINGS });
+  } else if (!settings.sport) {
+    await chrome.storage.local.set({ settings: { ...settings, sport: 'field_hockey' } });
   }
   const { matchState } = await chrome.storage.local.get('matchState');
   if (!matchState) {
@@ -351,26 +362,27 @@ function slugPart(str) {
 }
 
 function matchSlug(d) {
-  const date  = (d.date || 'unknown-date');
-  const ump1  = slugPart(d.umpire1) || 'Umpire1';
-  const ump2  = slugPart(d.umpire2) || 'Umpire2';
+  const date     = (d.date || 'unknown-date');
+  const officials = d.officials || [];
+  const offSlugs = officials.slice(0, 2).map((o, i) => slugPart(o.name) || `Official${i + 1}`).join('_')
+    || (slugPart(d.umpire1) || 'Umpire1') + '_' + (slugPart(d.umpire2) || 'Umpire2');
   const t1    = slugPart(d.team1);
   const t2    = slugPart(d.team2);
   const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';
-  return `${date}_${teams}${ump1}_${ump2}`;
+  return `${date}_${teams}${offSlugs}`;
 }
 
 function buildEventLog(matchState) {
   const { matchData, events } = matchState;
   const log = {
     match: {
+      sport:       matchData.sport,
+      officials:   matchData.officials,
       date:        matchData.date,
       competition: matchData.competition,
       venue:       matchData.venue,
       team1:       matchData.team1,
       team2:       matchData.team2,
-      umpire1:     matchData.umpire1,
-      umpire2:     matchData.umpire2,
     },
     events,
   };

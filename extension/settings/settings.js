@@ -1,3 +1,26 @@
+const SPORT_DATA = {
+  field_hockey: {
+    name: 'Field Hockey',
+    officials: ['Umpire 1', 'Umpire 2'],
+    tags: ['Positioning', 'Overheads', 'Breakdown', 'Whistle Timing', 'Hitting Ball Away', 'Advantage', 'Player Management', 'Green Card', 'Yellow Card', 'Red Card', 'Presentation', 'Teamwork'],
+  },
+  football: {
+    name: 'Football (Soccer)',
+    officials: ['Referee', 'AR 1', 'AR 2'],
+    tags: ['Offside Decision', 'Foul — Awarded', 'Foul — Missed', 'Advantage Played', 'Yellow Card', 'Red Card', 'Penalty Decision', 'Corner / Goal Kick', 'AR Flag', 'Positioning', 'Communication'],
+  },
+  rugby_union: {
+    name: 'Rugby Union',
+    officials: ['Referee', 'AR 1', 'AR 2'],
+    tags: ['Offside at Ruck', 'Offside at Lineout', 'High Tackle', 'Ruck Infringement', 'Scrum Decision', 'Penalty Awarded', 'Yellow Card', 'Red Card', 'Try Awarded', 'Try Denied', 'Advantage Played', 'Positioning', 'Communication'],
+  },
+  basketball: {
+    name: 'Basketball',
+    officials: ['Referee 1', 'Referee 2', 'Referee 3'],
+    tags: ['Foul Called', 'Foul Missed', 'Travel', 'Double Dribble', 'Out of Bounds', 'Goaltending', 'Technical Foul', 'Free Throw Administration', 'Shot Clock Violation', 'Positioning', 'Communication'],
+  },
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
   const { settings } = await msg({ type: 'GET_SETTINGS' });
   populate(settings ?? {});
@@ -18,7 +41,11 @@ function populate(s) {
   set('crop-margin',   String(s.cropOverlayMargin ?? 200));
   document.getElementById('crop-margin-value').textContent = s.cropOverlayMargin ?? 200;
 
-  renderTagList(s.tagTypes ?? []);
+  const sport = s.sport ?? 'field_hockey';
+  set('sport', sport);
+
+  const savedTags = s.tagTypes ?? SPORT_DATA[sport]?.tags ?? [];
+  renderTagList(savedTags);
 }
 
 // ── Tag list ──────────────────────────────────────────────────────────────────
@@ -117,6 +144,12 @@ function bindEvents() {
     }
   });
 
+  // Sport change — reset tag list to that sport's defaults
+  document.getElementById('sport').addEventListener('change', (e) => {
+    const sport = SPORT_DATA[e.target.value];
+    if (sport) renderTagList(sport.tags);
+  });
+
   // Add tag
   const addBtn = document.getElementById('add-tag-btn');
   const newTagInput = document.getElementById('new-tag');
@@ -203,6 +236,7 @@ function gather() {
     obsFramerate:        parseInt(get('obs-framerate')) || 30,
     cropOverlayMargin:   parseInt(get('crop-margin'))  || 200,
     clipOutputDirectory: outputDir,
+    sport:               get('sport') || 'field_hockey',
     tagTypes:            tagsFromDOM(),
   };
 }

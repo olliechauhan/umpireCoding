@@ -44,8 +44,8 @@ const C = {
   subtext:  '#8fa8d8',
 };
 
-// Per-umpire accent colours (blue for umpire 0, green for umpire 1)
-const UMPIRE_COLOR = ['#4f7cff', '#2dce89'];
+// Per-official accent colours
+const UMPIRE_COLOR = ['#4f7cff', '#2dce89', '#f59e0b'];
 
 const MARGIN    = 50;
 const PAGE_W    = 595.28;  // A4 portrait
@@ -123,13 +123,16 @@ function drawHeader(doc, meta) {
 
 // ── SECTION: Match details ────────────────────────────────────────────────────
 
-function drawMatchDetails(doc, meta, events, y) {
+function drawMatchDetails(doc, meta, events, officials, y) {
   doc.fillColor(C.brand).font('Helvetica-Bold').fontSize(13).text('Match Details', MARGIN, y);
   y += 18;
 
-  const umpires = [meta.umpire1, meta.umpire2].filter(Boolean);
+  const officialRows = officials.length > 0
+    ? officials.map(o => [o.role, o.name || '—'])
+    : [['Officials', '—']];
+
   const rows = [
-    ['Umpires',      umpires.join('  &  ') || '—'],
+    ...officialRows,
     ['Date',         meta.date        || '—'],
     ['Competition',  meta.competition || '—'],
     ['Venue',        meta.venue       || '—'],
@@ -341,16 +344,21 @@ function drawFooter(doc, events) {
 // ── Compose ───────────────────────────────────────────────────────────────────
 
 function writePDF(doc, meta, events) {
-  const umpires = [meta.umpire1, meta.umpire2].filter(Boolean);
+  // Support new officials array and old umpire1/umpire2 format
+  const officials = meta.officials
+    ? meta.officials.filter(o => o.name)
+    : [meta.umpire1, meta.umpire2].filter(Boolean).map((name, i) => ({ role: `Umpire ${i + 1}`, name }));
+
+  const officialNames = officials.map(o => o.name);
   const allTags = [...new Set(events.map(e => e.tag).filter(Boolean))].sort();
 
   drawHeader(doc, meta);
 
   let y = 110;
-  y = drawMatchDetails(doc, meta, events, y);
-  y = drawTimeline(doc, umpires, events, y);
-  y = drawSummary(doc, umpires, events, allTags, y);
-  drawEventTable(doc, umpires, events, y);
+  y = drawMatchDetails(doc, meta, events, officials, y);
+  y = drawTimeline(doc, officialNames, events, y);
+  y = drawSummary(doc, officialNames, events, allTags, y);
+  drawEventTable(doc, officialNames, events, y);
   drawFooter(doc, events);
 }
 

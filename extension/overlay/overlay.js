@@ -32,11 +32,25 @@ function mount() {
 }
 
 function buildPanelHTML() {
-  const u1 = esc(matchState?.matchData?.umpire1 ?? 'Umpire 1');
-  const u2 = esc(matchState?.matchData?.umpire2 ?? 'Umpire 2');
+  const officials = matchState?.matchData?.officials
+    || [
+        { name: matchState?.matchData?.umpire1 ?? 'Umpire 1' },
+        { name: matchState?.matchData?.umpire2 ?? 'Umpire 2' },
+      ].filter(o => o.name);
+
+  const officialButtons = officials
+    .map((o) => `<button class="umpire-btn" data-official="${esc(o.name)}">${esc(o.name)}</button>`)
+    .join('');
+
   const tagButtons = tagTypes
     .map((t) => `<button class="tag-btn" data-tag="${esc(t)}">${esc(t)}</button>`)
     .join('');
+
+  const officialLabel = matchState?.matchData?.sport === 'football' || matchState?.matchData?.sport === 'rugby_union'
+    ? 'Official'
+    : matchState?.matchData?.sport === 'basketball'
+      ? 'Referee'
+      : 'Umpire';
 
   return `
     <div class="header">
@@ -57,10 +71,9 @@ function buildPanelHTML() {
         <span class="delay-unit">s</span>
       </div>
 
-      <div class="section-label">Umpire</div>
-      <div class="umpire-row">
-        <button class="umpire-btn" id="u1-btn">${u1}</button>
-        <button class="umpire-btn" id="u2-btn">${u2}</button>
+      <div class="section-label">${esc(officialLabel)}</div>
+      <div class="umpire-row" id="officials-row">
+        ${officialButtons}
       </div>
 
       <div class="section-label">Tag Type</div>
@@ -123,9 +136,12 @@ function bindEvents() {
     e.target.value = streamDelaySecs;
   });
 
-  // Umpire selection
-  q('#u1-btn').addEventListener('click', () => selectUmpire('umpire1'));
-  q('#u2-btn').addEventListener('click', () => selectUmpire('umpire2'));
+  // Official selection
+  q('#officials-row').addEventListener('click', (e) => {
+    const btn = e.target.closest('.umpire-btn');
+    if (!btn) return;
+    selectUmpire(btn.dataset.official);
+  });
 
   // Tag selection
   q('#tags-grid').addEventListener('click', (e) => {
@@ -168,10 +184,11 @@ function bindEvents() {
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 
-function selectUmpire(which) {
-  selectedUmpire = which;
-  q('#u1-btn').classList.toggle('active', which === 'umpire1');
-  q('#u2-btn').classList.toggle('active', which === 'umpire2');
+function selectUmpire(name) {
+  selectedUmpire = name;
+  document.querySelectorAll('.umpire-btn').forEach((b) => {
+    b.classList.toggle('active', b.dataset.official === name);
+  });
 }
 
 async function logEvent() {
@@ -180,9 +197,7 @@ async function logEvent() {
 
   const liveElapsed     = q('#timer').textContent;
   const adjustedElapsed = applyDelay(liveElapsed, streamDelaySecs);
-  const umpireName      = selectedUmpire === 'umpire1'
-    ? matchState.matchData.umpire1
-    : matchState.matchData.umpire2;
+  const umpireName      = selectedUmpire;
 
   const event = {
     timestamp_elapsed:      adjustedElapsed,
