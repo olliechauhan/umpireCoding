@@ -304,6 +304,15 @@ async function handle(message) {
       return { success: true };
     }
 
+    case 'GIT_PULL': {
+      try {
+        const result = await sendNativeMessage('com.umpirecoder.postprocess', { type: 'GIT_PULL' });
+        return result;
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+
     default:
       return { error: `Unknown message type: ${message.type}` };
   }

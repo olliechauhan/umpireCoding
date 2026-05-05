@@ -174,6 +174,26 @@ function bindEvents() {
     }
   });
 
+  // Check for updates
+  document.getElementById('update-btn').addEventListener('click', async () => {
+    const statusEl = document.getElementById('update-status');
+    const btn = document.getElementById('update-btn');
+    btn.disabled = true;
+    setStatus(statusEl, 'Checking…', '');
+    const result = await msg({ type: 'GIT_PULL' });
+    btn.disabled = false;
+    if (!result.success) {
+      setStatus(statusEl, '✗ ' + result.error, 'error');
+      return;
+    }
+    if (result.upToDate) {
+      setStatus(statusEl, 'Already up to date.', 'success');
+    } else {
+      setStatus(statusEl, 'UmpireCoder has been updated. Reloading in 3 seconds…', 'success');
+      setTimeout(() => chrome.runtime.reload(), 3000);
+    }
+  });
+
   // Save all settings
   document.getElementById('save-btn').addEventListener('click', async () => {
     const statusEl = document.getElementById('save-status');
