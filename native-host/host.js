@@ -231,6 +231,7 @@ async function main() {
   if (msg.type === 'SET_PIN_OVERLAY') {
     const insertAfter = msg.pinned ? -1 : -2; // HWND_TOPMOST : HWND_NOTOPMOST
     const tmpScript = join(process.env.TEMP || process.env.TMP || '.', 'uc-pin.ps1');
+    const logFile = join(process.env.TEMP || process.env.TMP || '.', 'uc-pin.log');
     const ps = `Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
@@ -240,8 +241,15 @@ public class UcPin {
 }
 '@
 $h = [UcPin]::FindWindow("Chrome_WidgetWin_2", "Umpire Coder")
+"FindWindow Chrome_WidgetWin_2: $h" | Out-File -FilePath "${logFile}" -Append
 if ($h -eq [IntPtr]::Zero) { $h = [UcPin]::FindWindow($null, "Umpire Coder") }
-if ($h -ne [IntPtr]::Zero) { [UcPin]::SetWindowPos($h, [IntPtr](${insertAfter}), 0, 0, 0, 0, 0x0013) | Out-Null }
+"FindWindow null class: $h" | Out-File -FilePath "${logFile}" -Append
+if ($h -ne [IntPtr]::Zero) {
+  $r = [UcPin]::SetWindowPos($h, [IntPtr](${insertAfter}), 0, 0, 0, 0, 0x0013)
+  "SetWindowPos result: $r" | Out-File -FilePath "${logFile}" -Append
+} else {
+  "Window not found" | Out-File -FilePath "${logFile}" -Append
+}
 `;
     try {
       writeFileSync(tmpScript, ps, 'utf8');
