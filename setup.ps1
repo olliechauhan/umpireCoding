@@ -448,7 +448,7 @@ $chromeExe = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First
 # Open Chrome to google.com and minimise -- Chrome must be visible to OBS
 # before OBS launches so it appears in the window capture dropdown
 if ($chromeExe) {
-    Start-Process $chromeExe -ArgumentList "--new-window https://www.google.com" -WindowStyle Minimized
+    Start-Process $chromeExe -ArgumentList "--new-window https://buymeacoffee.com/olliechauhan" -WindowStyle Minimized
     Write-Info "Chrome opened (minimised) -- waiting for it to load..."
     Start-Sleep -Seconds 3
 } else {
