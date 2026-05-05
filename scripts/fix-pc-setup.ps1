@@ -3,9 +3,9 @@
 # registered as the native messaging host.
 #
 # What it does:
-#   1. Re-registers the native messaging host from the correct repo (~/umpirecoding)
+#   1. Re-registers the native messaging host from the correct repo (~\umpirecoding)
 #   2. Runs npm install for post-processing in the correct location
-#   3. Offers to remove the duplicate repo at ~/Documents/umpireCoding
+#   3. Offers to remove the duplicate repo at ~\Documents\umpireCoding
 #
 # How to run (in PowerShell):
 #   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -19,12 +19,11 @@ $RegKey        = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\com.umpireco
 $ManifestName  = "com.umpirecoder.postprocess"
 
 Write-Host ""
-Write-Host "Umpire Coder — Fix Duplicate Repo" -ForegroundColor Cyan
+Write-Host "Umpire Coder - Fix Duplicate Repo" -ForegroundColor Cyan
 Write-Host "===================================" -ForegroundColor Cyan
 Write-Host ""
 
-# ── Step 1: Verify the correct repo exists ────────────────────────────────────
-
+# Step 1: Verify the correct repo exists
 if (-not (Test-Path "$CorrectRepo\extension\manifest.json")) {
     Write-Host "ERROR: Could not find the extension at $CorrectRepo\extension" -ForegroundColor Red
     Write-Host "Make sure the repo exists at $CorrectRepo and try again." -ForegroundColor Red
@@ -32,8 +31,7 @@ if (-not (Test-Path "$CorrectRepo\extension\manifest.json")) {
 }
 Write-Host "Correct repo found at $CorrectRepo" -ForegroundColor Green
 
-# ── Step 2: Read extension ID from existing registration ─────────────────────
-
+# Step 2: Read extension ID from existing registration
 $extId = $null
 try {
     $existingManifestPath = (Get-ItemProperty -Path $RegKey -Name "(Default)")."(Default)"
@@ -56,8 +54,7 @@ if (-not $extId -or $extId.Length -ne 32) {
 
 Write-Host "Extension ID: $extId" -ForegroundColor Green
 
-# ── Step 3: Re-register native messaging host from correct location ───────────
-
+# Step 3: Re-register native messaging host from correct location
 Write-Host ""
 Write-Host "Re-registering native messaging host..." -ForegroundColor Yellow
 
@@ -83,8 +80,7 @@ Set-ItemProperty -Path $RegKey -Name "(Default)" -Value (Resolve-Path $manifestP
 
 Write-Host "  Registered: $manifestPath" -ForegroundColor Green
 
-# ── Step 4: npm install in the correct post-processing folder ─────────────────
-
+# Step 4: npm install in the correct post-processing folder
 Write-Host ""
 Write-Host "Installing post-processing dependencies..." -ForegroundColor Yellow
 Push-Location "$CorrectRepo\post-processing"
@@ -92,14 +88,13 @@ try {
     npm install --silent
     Write-Host "  Done." -ForegroundColor Green
 } catch {
-    Write-Host "  WARNING: npm install failed — $_" -ForegroundColor Yellow
+    Write-Host "  WARNING: npm install failed - $_" -ForegroundColor Yellow
     Write-Host "  Make sure Node.js is installed (https://nodejs.org) and re-run this script." -ForegroundColor Yellow
 } finally {
     Pop-Location
 }
 
-# ── Step 5: Offer to remove the duplicate repo ───────────────────────────────
-
+# Step 5: Offer to remove the duplicate repo
 if (Test-Path $DuplicateRepo) {
     Write-Host ""
     Write-Host "Duplicate repo found at $DuplicateRepo" -ForegroundColor Yellow
@@ -112,17 +107,16 @@ if (Test-Path $DuplicateRepo) {
     }
 } else {
     Write-Host ""
-    Write-Host "No duplicate repo found at $DuplicateRepo — nothing to clean up." -ForegroundColor Green
+    Write-Host "No duplicate repo found at $DuplicateRepo - nothing to clean up." -ForegroundColor Green
 }
 
-# ── Done ──────────────────────────────────────────────────────────────────────
-
+# Done
 Write-Host ""
 Write-Host "All done!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Open Chrome and go to chrome://extensions"
-Write-Host "  2. Click the reload arrow (circular icon) next to Umpire Coder"
+Write-Host "  2. Click the reload arrow next to Umpire Coder"
 Write-Host "  3. The extension version should now match the Mac version"
 Write-Host "  4. Check for Updates in Settings will now pull to the correct location"
 Write-Host ""
