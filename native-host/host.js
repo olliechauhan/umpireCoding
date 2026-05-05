@@ -232,9 +232,31 @@ async function main() {
     try {
       const insertAfter = msg.pinned ? -1 : -2; // HWND_TOPMOST : HWND_NOTOPMOST
       execFileSync('powershell', ['-NonInteractive', '-Command', `
-        Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class WinPin { [DllImport("user32.dll")] public static extern IntPtr FindWindow(string c, string t); [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr i, int x, int y, int w, int ht, uint f); }' -ErrorAction SilentlyContinue
-        $hwnd = [WinPin]::FindWindow([NullString]::Value, "Umpire Coder")
-        if ($hwnd -ne [IntPtr]::Zero) { [WinPin]::SetWindowPos($hwnd, [IntPtr]::new(${insertAfter}), 0, 0, 0, 0, 3) | Out-Null }
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+public class WinPin {
+    delegate bool Callback(IntPtr h, IntPtr p);
+    [DllImport("user32.dll")] static extern bool EnumWindows(Callback f, IntPtr p);
+    [DllImport("user32.dll")] static extern int GetWindowText(IntPtr h, StringBuilder s, int n);
+    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
+    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr i, int x, int y, int w, int ht, uint f);
+    public static IntPtr FindByTitle(string fragment) {
+        IntPtr found = IntPtr.Zero;
+        EnumWindows((h, p) => {
+            if (!IsWindowVisible(h)) return true;
+            var sb = new StringBuilder(512);
+            GetWindowText(h, sb, 512);
+            if (sb.ToString().IndexOf(fragment, StringComparison.OrdinalIgnoreCase) >= 0) { found = h; return false; }
+            return true;
+        }, IntPtr.Zero);
+        return found;
+    }
+}
+'@ -ErrorAction SilentlyContinue
+        $hwnd = [WinPin]::FindByTitle("Umpire Coder")
+        if ($hwnd -ne [IntPtr]::Zero) { [WinPin]::SetWindowPos($hwnd, [IntPtr](${insertAfter}), 0, 0, 0, 0, 3) | Out-Null }
       `], { encoding: 'utf8', timeout: 5_000 });
       sendMessage({ success: true });
     } catch (err) {
