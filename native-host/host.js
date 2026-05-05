@@ -309,9 +309,24 @@ async function main() {
       results.push({ type: 'clips', success: true, message: out.trim() });
       // Delete the original recording now that all clips are cut.
       // Normalize the path — OBS on Windows often returns forward-slash paths.
+      // Retry on EBUSY — OBS may still hold the file briefly after clip cutting finishes.
       try {
-        unlinkSync(resolve(videoPath));
-        results.push({ type: 'cleanup', success: true, message: 'Original recording deleted.' });
+        const target = resolve(videoPath);
+        let deleted = false;
+        for (let attempt = 0; attempt < 5; attempt++) {
+          try {
+            unlinkSync(target);
+            deleted = true;
+            break;
+          } catch (e) {
+            if (e.code === 'EBUSY' && attempt < 4) {
+              await new Promise(r => setTimeout(r, 2000));
+            } else {
+              throw e;
+            }
+          }
+        }
+        if (deleted) results.push({ type: 'cleanup', success: true, message: 'Original recording deleted.' });
       } catch (err) {
         results.push({ type: 'cleanup', success: false, error: `Could not delete recording: ${err.message}` });
       }
