@@ -35,13 +35,15 @@ function slugPart(str) {
 }
 
 function matchSlug(meta) {
-  const date = meta.date || 'unknown-date';
-  const ump1 = slugPart(meta.umpire1) || 'Umpire1';
-  const ump2 = slugPart(meta.umpire2) || 'Umpire2';
-  const t1   = slugPart(meta.team1);
-  const t2   = slugPart(meta.team2);
+  const date      = meta.date || 'unknown-date';
+  const officials = meta.officials
+    ? meta.officials.filter(o => o.name).map((o, i) => slugPart(o.name) || `Official${i + 1}`)
+    : [meta.umpire1, meta.umpire2].filter(Boolean).map(slugPart);
+  const offSlugs  = officials.length > 0 ? officials.join('_') : 'Unknown';
+  const t1    = slugPart(meta.team1);
+  const t2    = slugPart(meta.team2);
   const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';
-  return `${date}_${teams}${ump1}_${ump2}`;
+  return `${date}_${teams}${offSlugs}`;
 }
 
 // ── Native messaging I/O ──────────────────────────────────────────────────────
