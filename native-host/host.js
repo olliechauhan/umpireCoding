@@ -229,25 +229,18 @@ async function main() {
   }
 
   if (msg.type === 'GIT_PULL') {
-    const repoDir = join(__dirname, '..');
-    const gitCandidates = ['git', 'C:\\Program Files\\Git\\cmd\\git.exe'];
-    let lastErr = null;
-    for (const gitBin of gitCandidates) {
-      try {
-        const stdout = execFileSync(gitBin, ['pull'], {
-          cwd: repoDir, encoding: 'utf8', timeout: 30_000,
-        });
-        const upToDate = stdout.includes('Already up to date');
-        sendMessage({ success: true, upToDate });
-        return;
-      } catch (err) {
-        if (err.code === 'ENOENT') { lastErr = err; continue; }
-        const detail = (err.stderr || '').toString().trim() || err.message;
-        sendMessage({ success: false, error: detail });
-        return;
-      }
+    try {
+      const repoDir = join(__dirname, '..');
+      // shell: true uses cmd.exe PATH so git is found even in Chrome's restricted env
+      const stdout = execFileSync('git', ['pull'], {
+        cwd: repoDir, encoding: 'utf8', timeout: 30_000, shell: true,
+      });
+      const upToDate = stdout.includes('Already up to date');
+      sendMessage({ success: true, upToDate });
+    } catch (err) {
+      const detail = (err.stderr || '').toString().trim() || err.message;
+      sendMessage({ success: false, error: detail });
     }
-    sendMessage({ success: false, error: 'git not found. Install Git for Windows and try again.' });
     return;
   }
 
