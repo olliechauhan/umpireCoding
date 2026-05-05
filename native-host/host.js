@@ -231,19 +231,27 @@ async function main() {
   if (msg.type === 'GIT_PULL') {
     try {
       const repoDir = join(__dirname, '..');
-      // shell: true uses cmd.exe PATH so git is found even in Chrome's restricted env
-      const stdout = execFileSync('git', ['pull'], {
-        cwd: repoDir, encoding: 'utf8', timeout: 30_000, shell: true,
+      // Use absolute cmd.exe path — Chrome's restricted PATH may not include System32.
+      // cmd.exe runs git via the user's full Windows PATH (which includes Git for Windows).
+      const cmdExe = process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe';
+      const stdout = execFileSync(cmdExe, ['/d', '/s', '/c', 'git pull'], {
+        cwd: repoDir, encoding: 'utf8', timeout: 30_000,
       });
       const upToDate = stdout.includes('Already up to date');
       sendMessage({ success: true, upToDate });
     } catch (err) {
-      const detail = (err.stderr || '').toString().trim() || err.message;
+      const detail = (err.stdout || err.stderr || '').toString().trim() || err.message;
       sendMessage({ success: false, error: detail });
     }
     return;
   }
 
+
+  // Unknown named message type — don't fall through to match processing
+  if (msg.type) {
+    sendMessage({ success: false, error: `Unknown message type: ${msg.type}` });
+    return;
+  }
 
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
 
