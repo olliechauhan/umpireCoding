@@ -9,6 +9,7 @@
 import { execFileSync, spawn } from 'child_process';
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import net from 'net';
+import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -230,8 +231,8 @@ async function main() {
 
   if (msg.type === 'SET_PIN_OVERLAY') {
     const insertAfter = msg.pinned ? -1 : -2; // HWND_TOPMOST : HWND_NOTOPMOST
-    const tmpScript = join(process.env.TEMP || process.env.TMP || '.', 'uc-pin.ps1');
-    const logFile = join(process.env.TEMP || process.env.TMP || '.', 'uc-pin.log');
+    const tmpScript = join(tmpdir(), 'uc-pin.ps1');
+    const logFile   = join(tmpdir(), 'uc-pin.log');
     const ps = `Add-Type -TypeDefinition @'
 using System;
 using System.Runtime.InteropServices;
