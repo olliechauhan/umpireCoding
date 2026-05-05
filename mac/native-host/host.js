@@ -235,20 +235,6 @@ async function main() {
     return;
   }
 
-  if (msg.type === 'SET_PIN_OVERLAY') {
-    // macOS has no API to set another app's window always-on-top from outside.
-    // Best effort: raise the Umpire Coder window to front when pinned.
-    if (msg.pinned) {
-      try {
-        execFileSync('osascript', ['-e',
-          'tell application "System Events" to tell process "Google Chrome" to set frontmost to true\n' +
-          'tell application "System Events" to tell process "Google Chrome" to perform action "AXRaise" of first window whose name is "Umpire Coder"'
-        ], { encoding: 'utf8', timeout: 3_000 });
-      } catch { /* non-fatal */ }
-    }
-    sendMessage({ success: true });
-    return;
-  }
 
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
 

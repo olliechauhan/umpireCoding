@@ -9,7 +9,6 @@
 import { execFileSync, spawn } from 'child_process';
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import net from 'net';
-import { tmpdir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -229,41 +228,6 @@ async function main() {
     return;
   }
 
-  if (msg.type === 'SET_PIN_OVERLAY') {
-    const insertAfter = msg.pinned ? -1 : -2; // HWND_TOPMOST : HWND_NOTOPMOST
-    const tmpScript = join(tmpdir(), 'uc-pin.ps1');
-    const logFile   = join(tmpdir(), 'uc-pin.log');
-    const ps = `Add-Type -TypeDefinition @'
-using System;
-using System.Runtime.InteropServices;
-public class UcPin {
-    [DllImport("user32.dll")] public static extern IntPtr FindWindow(string c, string t);
-    [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr i, int x, int y, int w, int ht, uint f);
-}
-'@
-$h = [UcPin]::FindWindow("Chrome_WidgetWin_2", "Umpire Coder")
-"FindWindow Chrome_WidgetWin_2: $h" | Out-File -FilePath "${logFile}" -Append
-if ($h -eq [IntPtr]::Zero) { $h = [UcPin]::FindWindow($null, "Umpire Coder") }
-"FindWindow null class: $h" | Out-File -FilePath "${logFile}" -Append
-if ($h -ne [IntPtr]::Zero) {
-  $r = [UcPin]::SetWindowPos($h, [IntPtr](${insertAfter}), 0, 0, 0, 0, 0x0013)
-  "SetWindowPos result: $r" | Out-File -FilePath "${logFile}" -Append
-} else {
-  "Window not found" | Out-File -FilePath "${logFile}" -Append
-}
-`;
-    try {
-      writeFileSync(logFile, `[node] handler reached, insertAfter=${insertAfter}\n`, 'utf8');
-      writeFileSync(tmpScript, ps, 'utf8');
-      execFileSync('powershell', ['-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmpScript], { encoding: 'utf8', timeout: 5_000 });
-      sendMessage({ success: true });
-    } catch (err) {
-      sendMessage({ success: false, error: err.message });
-    } finally {
-      try { unlinkSync(tmpScript); } catch { /* ignore */ }
-    }
-    return;
-  }
 
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
 

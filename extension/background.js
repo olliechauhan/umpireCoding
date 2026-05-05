@@ -288,16 +288,6 @@ async function handle(message) {
       }
     }
 
-    case 'SET_PIN_OVERLAY': {
-      try {
-        const result = await sendNativeMessage('com.umpirecoder.postprocess', message);
-        if (!result?.success) return { success: false, error: result?.error || 'Native host returned failure' };
-      } catch (err) {
-        return { success: false, error: err.message };
-      }
-      return { success: true };
-    }
-
     case 'OPEN_FOLDER': {
       try {
         await sendNativeMessage('com.umpirecoder.postprocess', message);

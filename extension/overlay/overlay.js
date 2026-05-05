@@ -9,7 +9,6 @@ let selectedUmpire  = null;
 let selectedTag     = null;
 let timerInterval   = null;
 let streamDelaySecs = 0;
-let pinned          = false;
 
 document.addEventListener('DOMContentLoaded', () => {
   Promise.all([
@@ -45,7 +44,6 @@ function buildPanelHTML() {
       <div class="controls">
         <button class="ctrl" id="folder-btn" title="Open output folder">📁</button>
 <button class="ctrl" id="settings-btn" title="Settings">⚙</button>
-        <button class="ctrl" id="pin-btn" title="Pin to top">📌</button>
         <button class="ctrl" id="min-btn" title="Minimise">−</button>
       </div>
     </div>
@@ -99,15 +97,6 @@ function buildPanelHTML() {
 // ── Events ───────────────────────────────────────────────────────────────────
 
 function bindEvents() {
-  // Pin — toggle always-on-top (Windows) / raise-to-front (Mac)
-  q('#pin-btn').addEventListener('click', async () => {
-    pinned = !pinned;
-    q('#pin-btn').classList.toggle('pinned', pinned);
-    q('#pin-btn').title = pinned ? 'Unpin' : 'Pin to top';
-    const res = await sendMsg({ type: 'SET_PIN_OVERLAY', pinned });
-    if (res && !res.success) flash(`Pin failed: ${res.error}`, 'error');
-  });
-
   // Minimise — minimize the OS window
   q('#min-btn').addEventListener('click', async () => {
     const win = await chrome.windows.getCurrent();
