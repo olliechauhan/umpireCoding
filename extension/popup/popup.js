@@ -59,15 +59,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       name: val(`official-${i}`),
     }));
 
-    const empty = officials.filter(o => !o.name);
-    if (empty.length > 0) {
-      showError(`Name required for: ${empty.map(o => o.role).join(', ')}`);
+    if (!officials[0]?.name) {
+      showError(`${officials[0]?.role || 'First official'} name is required.`);
       return;
     }
 
     const matchData = {
       sport,
-      officials,
+      officials: officials.filter(o => o.name),
       team1:       val('team1'),
       team2:       val('team2'),
       date:        val('date'),

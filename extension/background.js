@@ -362,10 +362,11 @@ function slugPart(str) {
 }
 
 function matchSlug(d) {
-  const date     = (d.date || 'unknown-date');
+  const date      = (d.date || 'unknown-date');
   const officials = d.officials || [];
-  const offSlugs = officials.slice(0, 2).map((o, i) => slugPart(o.name) || `Official${i + 1}`).join('_')
-    || (slugPart(d.umpire1) || 'Umpire1') + '_' + (slugPart(d.umpire2) || 'Umpire2');
+  const offSlugs  = officials.length > 0
+    ? officials.map((o, i) => slugPart(o.name) || `Official${i + 1}`).join('_')
+    : (slugPart(d.umpire1) || 'Umpire1') + '_' + (slugPart(d.umpire2) || 'Umpire2');
   const t1    = slugPart(d.team1);
   const t2    = slugPart(d.team2);
   const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';

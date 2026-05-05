@@ -76,13 +76,15 @@ function slugPart(str) {
 }
 
 function matchSlug(meta) {
-  const date  = meta.date || 'unknown-date';
-  const ump1  = slugPart(meta.umpire1) || 'Umpire1';
-  const ump2  = slugPart(meta.umpire2) || 'Umpire2';
+  const date      = meta.date || 'unknown-date';
+  const officials = meta.officials
+    ? meta.officials.filter(o => o.name).map((o, i) => slugPart(o.name) || `Official${i + 1}`)
+    : [meta.umpire1, meta.umpire2].filter(Boolean).map(slugPart);
+  const offSlugs  = officials.length > 0 ? officials.join('_') : 'Unknown';
   const t1    = slugPart(meta.team1);
   const t2    = slugPart(meta.team2);
   const teams = (t1 && t2) ? `${t1}_v_${t2}_` : '';
-  return `${date}_${teams}${ump1}_${ump2}`;
+  return `${date}_${teams}${offSlugs}`;
 }
 
 function reportFilename(meta) {
@@ -221,53 +223,59 @@ function drawSummary(doc, umpires, events, allTags, y) {
     1
   );
 
-  const startY  = y;
-  let   colMaxY = y;
+  // Render in rows of 2 columns to support 3+ officials
+  for (let rowStart = 0; rowStart < umpires.length; rowStart += 2) {
+    const rowUmpires = umpires.slice(rowStart, rowStart + 2);
+    const rowStartY  = y;
+    let   rowMaxY    = y;
 
-  for (const [idx, umpire] of umpires.entries()) {
-    const color     = UMPIRE_COLOR[idx] || C.brand;
-    const colX      = MARGIN + idx * (COL_W + COL_GAP);
-    let   colY      = startY;
+    for (const [colIdx, umpire] of rowUmpires.entries()) {
+      const globalIdx = rowStart + colIdx;
+      const color     = UMPIRE_COLOR[globalIdx] || C.brand;
+      const colX      = MARGIN + colIdx * (COL_W + COL_GAP);
+      let   colY      = rowStartY;
 
-    const umpireEvs = events.filter(e => e.umpire === umpire);
-    const tagCounts = countBy(umpireEvs, 'tag');
-    const total     = umpireEvs.length;
+      const umpireEvs = events.filter(e => e.umpire === umpire);
+      const tagCounts = countBy(umpireEvs, 'tag');
+      const total     = umpireEvs.length;
 
-    doc.rect(colX, colY, COL_W, 24).fillColor(color).fill();
-    doc.fillColor(C.white).font('Helvetica-Bold').fontSize(11)
-       .text(umpire, colX + 8, colY + 6, { width: COL_W - 70, lineBreak: false });
-    doc.fillColor(C.white).font('Helvetica').fontSize(9)
-       .text(`${total} event${total !== 1 ? 's' : ''}`, colX + COL_W - 62, colY + 8, { width: 54, align: 'right' });
-    colY += 30;
+      doc.rect(colX, colY, COL_W, 24).fillColor(color).fill();
+      doc.fillColor(C.white).font('Helvetica-Bold').fontSize(11)
+         .text(umpire, colX + 8, colY + 6, { width: COL_W - 70, lineBreak: false });
+      doc.fillColor(C.white).font('Helvetica').fontSize(9)
+         .text(`${total} event${total !== 1 ? 's' : ''}`, colX + COL_W - 62, colY + 8, { width: 54, align: 'right' });
+      colY += 30;
 
-    if (Object.keys(tagCounts).length === 0) {
-      doc.fillColor(C.muted).font('Helvetica').fontSize(9).text('No events', colX + 4, colY);
-      colY += 14;
-    } else {
-      for (const tag of allTags) {
-        const count = tagCounts[tag] || 0;
-        if (count === 0) continue;
+      if (Object.keys(tagCounts).length === 0) {
+        doc.fillColor(C.muted).font('Helvetica').fontSize(9).text('No events', colX + 4, colY);
+        colY += 14;
+      } else {
+        for (const tag of allTags) {
+          const count = tagCounts[tag] || 0;
+          if (count === 0) continue;
 
-        const rowBg = (colY % 32 < 16) ? '#f8f9ff' : C.rowOdd;
-        doc.rect(colX, colY, COL_W, 15).fillColor(rowBg).fill();
+          const rowBg = (colY % 32 < 16) ? '#f8f9ff' : C.rowOdd;
+          doc.rect(colX, colY, COL_W, 15).fillColor(rowBg).fill();
 
-        doc.fillColor(C.text).font('Helvetica').fontSize(9)
-           .text(tag, colX + 4, colY + 2, { width: TAG_W, lineBreak: false });
+          doc.fillColor(C.text).font('Helvetica').fontSize(9)
+             .text(tag, colX + 4, colY + 2, { width: TAG_W, lineBreak: false });
 
-        const barW = Math.max(3, Math.round((count / maxCount) * BAR_MAX));
-        doc.rect(colX + TAG_W + 8, colY + 4, barW, 7).fillColor(color).fill();
+          const barW = Math.max(3, Math.round((count / maxCount) * BAR_MAX));
+          doc.rect(colX + TAG_W + 8, colY + 4, barW, 7).fillColor(color).fill();
 
-        doc.fillColor(color).font('Helvetica-Bold').fontSize(9)
-           .text(String(count), colX + COL_W - COUNT_W - 2, colY + 2, { width: COUNT_W, align: 'right' });
+          doc.fillColor(color).font('Helvetica-Bold').fontSize(9)
+             .text(String(count), colX + COL_W - COUNT_W - 2, colY + 2, { width: COUNT_W, align: 'right' });
 
-        colY += 15;
+          colY += 15;
+        }
       }
+
+      rowMaxY = Math.max(rowMaxY, colY);
     }
 
-    colMaxY = Math.max(colMaxY, colY);
+    y = rowMaxY + 12;
   }
 
-  y = colMaxY + 10;
   doc.moveTo(MARGIN, y).lineTo(PAGE_W - MARGIN, y).strokeColor(C.border).lineWidth(0.5).stroke();
   y += 16;
   return y;
