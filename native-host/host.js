@@ -230,7 +230,10 @@ async function main() {
 
   if (msg.type === 'GIT_PULL') {
     try {
-      const repoDir = join(__dirname, '..');
+      // UC_REPO_DIR is set by host.cmd (%~dp0..) so git pull always runs in
+      // the repo the native host was installed from. Falls back to one level
+      // up from __dirname (native-host → repo root) for dev use.
+      const repoDir = process.env.UC_REPO_DIR || join(__dirname, '..');
       // Use absolute cmd.exe path — Chrome's restricted PATH may not include System32.
       // cmd.exe runs git via the user's full Windows PATH (which includes Git for Windows).
       const cmdExe = process.env.ComSpec || 'C:\\Windows\\System32\\cmd.exe';
