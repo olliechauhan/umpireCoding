@@ -1,5 +1,7 @@
 # Umpire Coder
 
+[![Buy Me A Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://buymeacoffee.com/olliechauhan)
+
 A Chrome extension for hockey match official performance analysis. Tag events live during a streamed match, then automatically generate timestamped video clips and a PDF report — no video editing required.
 
 ---

@@ -368,3 +368,15 @@ input[type='range']::-moz-range-thumb {
   border-top: 1px solid var(--border);
   backdrop-filter: blur(8px);
 }
+
+.coffee-link {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.coffee-link:hover {
+  color: var(--text);
+}
