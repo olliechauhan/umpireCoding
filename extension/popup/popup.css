@@ -198,29 +198,6 @@ input[type='date']::-webkit-calendar-picker-indicator {
   margin-top: 10px;
 }
 
-/* ── Continue without video button ── */
-
-.outline-btn {
-  display: block;
-  width: 100%;
-  margin-top: 8px;
-  padding: 9px;
-  background: transparent;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius);
-  color: var(--primary);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background 0.15s, color 0.15s;
-}
-
-.outline-btn:hover {
-  background: var(--primary);
-  color: #fff;
-}
-
 /* ── Active match screen ── */
 
 #active-screen {
