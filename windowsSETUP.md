@@ -153,4 +153,4 @@ Documents\
 
 ---
 
-For issues or questions, open a report at [github.com/olliechauhan/umpireCoding/issues](https://github.com/olliechauhan/umpireCoding/issues).
+For issues or questions, open a report at [github.com/olliechauhan/umpireCoding/issues](https://github.com/olliechauhan/umpireCoding/issues)..
