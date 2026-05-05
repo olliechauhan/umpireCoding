@@ -232,7 +232,7 @@ async function main() {
     try {
       const insertAfter = msg.pinned ? -1 : -2; // HWND_TOPMOST : HWND_NOTOPMOST
       execFileSync('powershell', ['-NonInteractive', '-Command',
-        `Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class UcPin { [DllImport("user32.dll")] public static extern IntPtr FindWindow(string c, string t); [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr i, int x, int y, int w, int ht, uint f); }' -ErrorAction SilentlyContinue; $h = [UcPin]::FindWindow($null, "Umpire Coder"); if ($h -ne [IntPtr]::Zero) { [UcPin]::SetWindowPos($h, [IntPtr](${insertAfter}), 0, 0, 0, 0, 3) | Out-Null }`,
+        `Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class UcPin { [DllImport("user32.dll")] public static extern IntPtr FindWindow(string c, string t); [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr i, int x, int y, int w, int ht, uint f); }'; $h = [UcPin]::FindWindow("Chrome_WidgetWin_2", "Umpire Coder"); if ($h -eq [IntPtr]::Zero) { $h = [UcPin]::FindWindow($null, "Umpire Coder") }; if ($h -ne [IntPtr]::Zero) { [UcPin]::SetWindowPos($h, [IntPtr](${insertAfter}), 0, 0, 0, 0, 0x0013) | Out-Null }`,
       ], { encoding: 'utf8', timeout: 5_000 });
       sendMessage({ success: true });
     } catch (err) {
