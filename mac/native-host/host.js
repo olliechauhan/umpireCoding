@@ -236,30 +236,29 @@ async function main() {
   }
 
   if (msg.type === 'GIT_PULL') {
-    const repoDir = join(__dirname, '..', '..');
-    const gitCandidates = ['git', '/usr/bin/git', '/usr/local/bin/git', '/opt/homebrew/bin/git'];
-    let lastErr = null;
-    for (const gitBin of gitCandidates) {
-      try {
-        const stdout = execFileSync(gitBin, ['pull'], {
-          cwd: repoDir, encoding: 'utf8', timeout: 30_000,
-        });
-        const upToDate = stdout.includes('Already up to date');
-        dbg('GIT_PULL success, upToDate=' + upToDate);
-        sendMessage({ success: true, upToDate });
-        return;
-      } catch (err) {
-        if (err.code === 'ENOENT') { lastErr = err; continue; }
-        const detail = (err.stderr || '').toString().trim() || err.message;
-        dbg('GIT_PULL error: ' + detail);
-        sendMessage({ success: false, error: detail });
-        return;
-      }
+    try {
+      const repoDir = join(__dirname, '..', '..');
+      // /bin/sh is always present on macOS regardless of Chrome's restricted PATH.
+      // The shell finds git via the user's full PATH (Homebrew, Xcode CLI tools, etc.).
+      const stdout = execFileSync('/bin/sh', ['-c', 'git pull'], {
+        cwd: repoDir, encoding: 'utf8', timeout: 30_000,
+      });
+      const upToDate = stdout.includes('Already up to date');
+      dbg('GIT_PULL success upToDate=' + upToDate);
+      sendMessage({ success: true, upToDate });
+    } catch (err) {
+      const detail = (err.stdout || err.stderr || '').toString().trim() || err.message;
+      dbg('GIT_PULL error: ' + detail);
+      sendMessage({ success: false, error: detail });
     }
-    sendMessage({ success: false, error: 'git not found. Install Git (Xcode CLI tools) and try again.' });
     return;
   }
 
+  // Unknown named message type — don't fall through to match processing
+  if (msg.type) {
+    sendMessage({ success: false, error: `Unknown message type: ${msg.type}` });
+    return;
+  }
 
   const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
 
