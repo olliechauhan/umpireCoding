@@ -288,8 +288,15 @@ function drawEventTable(doc, umpires, events, y) {
   y += 20;
 
   const cols = { num: 30, time: 68, live: 68, umpire: 110, tag: 105, notes: 114 };
-  const ROW_H    = 16;
-  const HEADER_H = 18;
+  const MIN_ROW_H = 16;
+  const HEADER_H  = 18;
+
+  function rowHeight(ev) {
+    doc.font('Helvetica').fontSize(8);
+    const notesH = ev.notes ? doc.heightOfString(ev.notes, { width: cols.notes - 4 }) : 0;
+    const tagH   = ev.tag   ? doc.heightOfString(ev.tag,   { width: cols.tag   - 4 }) : 0;
+    return Math.max(MIN_ROW_H, notesH + 8, tagH + 8);
+  }
 
   function tableHeader(yPos) {
     doc.rect(MARGIN, yPos, CONTENT_W, HEADER_H).fillColor(C.headerBg).fill();
@@ -307,13 +314,15 @@ function drawEventTable(doc, umpires, events, y) {
   y = tableHeader(y);
 
   for (let i = 0; i < events.length; i++) {
+    const ev    = events[i];
+    const ROW_H = rowHeight(ev);
+
     if (y + ROW_H > doc.page.height - 50) {
       doc.addPage();
       y = MARGIN;
       y = tableHeader(y);
     }
 
-    const ev          = events[i];
     const umpireColor = UMPIRE_COLOR[umpires.indexOf(ev.umpire)] || C.brand;
     doc.rect(MARGIN, y, CONTENT_W, ROW_H).fillColor(i % 2 === 0 ? C.rowEven : C.rowOdd).fill();
 
