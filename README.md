@@ -18,9 +18,8 @@ A Chrome extension for hockey match official performance analysis. Tag events li
 
 - Google Chrome
 - Windows 10/11 or macOS 12 (Monterey) or later
-- OBS Studio (free — [obsproject.com](https://obsproject.com))
 
-Everything else (Node.js, Git, ffmpeg) is installed automatically by the setup script.
+Everything else (Node.js, Git, OBS Studio, ffmpeg) is installed automatically by the setup script.
 
 ---
 

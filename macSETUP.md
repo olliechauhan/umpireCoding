@@ -63,8 +63,6 @@ bash <(curl -fsSL https://raw.githubusercontent.com/olliechauhan/umpireCoding/ma
 
 > **Tip:** You can pin the extension to your toolbar by clicking the puzzle piece icon at the top right of Chrome and clicking the pin next to Umpire Coder.
 
-> **Note:** On macOS, avoid choosing your Downloads, Documents or Desktop folder as the output directory — macOS restricts Chrome's background process from writing to those locations. Use your Movies or home folder instead.
-
 ---
 
 ## Step 3 — You're Ready
@@ -72,11 +70,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/olliechauhan/umpireCoding/ma
 Here is the workflow for each match:
 
 ### Before the match
-1. Open **OBS Studio** and make sure it is running
-2. Open the livestream in Chrome
-3. Click the **Umpire Coder** icon in Chrome
-4. Fill in the umpire names (required) and optionally the date, competition, and venue
-5. Click **▶ Start Match** — OBS will begin recording and the tagging overlay will appear on screen
+1. Open the livestream in Chrome
+2. Click the **Umpire Coder** icon in Chrome
+3. Fill in the umpire names (required) and optionally the date, competition, and venue
+4. Click **▶ Start Match** — OBS will launch automatically, begin recording, and the tagging overlay will appear on screen
 
 ### During the match
 - Use the overlay to tag events:
@@ -124,7 +121,6 @@ Click the **🔄** button in the top-right corner of the extension popup. If new
 - Check that the full match video exists in `~/Movies/umpire-recordings`
 - Check that ffmpeg is installed: open Terminal and run `ffmpeg -version`
 - The PDF report is always generated regardless of whether clips are cut
-- Make sure the output directory is not inside Downloads, Documents or Desktop (macOS restricts those folders)
 
 **OBS shows a security warning and won't open**
 - Go to System Settings → Privacy & Security → scroll down and click **Open Anyway** next to the OBS entry

@@ -69,11 +69,10 @@ powershell -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.c
 Here is the workflow for each match:
 
 ### Before the match
-1. Open **OBS Studio** and make sure it is running
-2. Open the livestream in Chrome
-3. Click the **Umpire Coder** icon in Chrome
-4. Fill in the umpire names (required) and optionally the date, competition, and venue
-5. Click **▶ Start Match** — OBS will begin recording and the tagging overlay will appear on screen
+1. Open the livestream in Chrome
+2. Click the **Umpire Coder** icon in Chrome
+3. Fill in the umpire names (required) and optionally the date, competition, and venue
+4. Click **▶ Start Match** — OBS will launch automatically, begin recording, and the tagging overlay will appear on screen
 
 ### During the match
 - Use the overlay to tag events:
