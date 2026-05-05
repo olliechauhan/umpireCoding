@@ -104,7 +104,8 @@ function bindEvents() {
     pinned = !pinned;
     q('#pin-btn').classList.toggle('pinned', pinned);
     q('#pin-btn').title = pinned ? 'Unpin' : 'Pin to top';
-    sendMsg({ type: 'SET_PIN_OVERLAY', pinned });
+    const res = await sendMsg({ type: 'SET_PIN_OVERLAY', pinned });
+    if (res && !res.success) flash(`Pin failed: ${res.error}`, 'error');
   });
 
   // Minimise — minimize the OS window

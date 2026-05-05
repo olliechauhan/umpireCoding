@@ -252,6 +252,7 @@ if ($h -ne [IntPtr]::Zero) {
 }
 `;
     try {
+      writeFileSync(logFile, `[node] handler reached, insertAfter=${insertAfter}\n`, 'utf8');
       writeFileSync(tmpScript, ps, 'utf8');
       execFileSync('powershell', ['-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', tmpScript], { encoding: 'utf8', timeout: 5_000 });
       sendMessage({ success: true });
