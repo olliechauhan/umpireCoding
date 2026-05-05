@@ -5,12 +5,12 @@ const SPORT_DATA = {
     tags: ['Positioning', 'Overheads', 'Breakdown', 'Whistle Timing', 'Hitting Ball Away', 'Advantage', 'Player Management', 'Green Card', 'Yellow Card', 'Red Card', 'Presentation', 'Teamwork'],
   },
   football: {
-    name: 'Football (Soccer)',
+    name: 'Football',
     officials: ['Referee', 'AR 1', 'AR 2'],
     tags: ['Offside Decision', 'Foul — Awarded', 'Foul — Missed', 'Advantage Played', 'Yellow Card', 'Red Card', 'Penalty Decision', 'Corner / Goal Kick', 'AR Flag', 'Positioning', 'Communication'],
   },
   rugby_union: {
-    name: 'Rugby Union',
+    name: 'Rugby',
     officials: ['Referee', 'AR 1', 'AR 2'],
     tags: ['Offside at Ruck', 'Offside at Lineout', 'High Tackle', 'Ruck Infringement', 'Scrum Decision', 'Penalty Awarded', 'Yellow Card', 'Red Card', 'Try Awarded', 'Try Denied', 'Advantage Played', 'Positioning', 'Communication'],
   },
