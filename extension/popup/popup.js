@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Setup form ───────────────────────────────────────────────────────────────
 
   document.getElementById('settings-btn').addEventListener('click', openSettings);
+  bindUpdateBtn();
 
   document.getElementById('setup-form').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -77,6 +78,7 @@ function showActiveScreen(matchState) {
     `${teams}${m.umpire1} & ${m.umpire2}\n${m.competition || ''} ${m.venue ? '· ' + m.venue : ''}`.trim();
 
   document.getElementById('settings-btn').addEventListener('click', openSettings);
+  bindUpdateBtn();
 
   document.getElementById('resume-btn').addEventListener('click', async () => {
     await msg({ type: 'REINJECT_OVERLAY' });
@@ -89,6 +91,42 @@ function showActiveScreen(matchState) {
     btn.textContent = 'Ending…';
     await msg({ type: 'END_MATCH' });
     window.close();
+  });
+}
+
+// ── Update ───────────────────────────────────────────────────────────────────
+
+function bindUpdateBtn() {
+  document.getElementById('update-btn').addEventListener('click', async () => {
+    const btn = document.getElementById('update-btn');
+    const statusEl = document.getElementById('update-status');
+    btn.disabled = true;
+    btn.classList.add('spinning');
+    statusEl.hidden = true;
+
+    const result = await msg({ type: 'GIT_PULL' });
+
+    btn.disabled = false;
+    btn.classList.remove('spinning');
+
+    if (!result.success) {
+      statusEl.textContent = '✗ ' + result.error;
+      statusEl.className = 'update-status error';
+      statusEl.hidden = false;
+      return;
+    }
+
+    if (result.upToDate) {
+      statusEl.textContent = 'Already up to date.';
+      statusEl.className = 'update-status success';
+      statusEl.hidden = false;
+      setTimeout(() => { statusEl.hidden = true; }, 3000);
+    } else {
+      statusEl.textContent = 'Updated! Reloading…';
+      statusEl.className = 'update-status success';
+      statusEl.hidden = false;
+      setTimeout(() => chrome.runtime.reload(), 2000);
+    }
   });
 }
 

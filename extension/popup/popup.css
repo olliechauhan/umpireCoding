@@ -71,7 +71,14 @@ h2 {
   margin-bottom: 14px;
 }
 
-#settings-btn {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#settings-btn,
+#update-btn {
   background: none;
   border: 1px solid var(--border);
   color: var(--text-muted);
@@ -87,9 +94,43 @@ h2 {
   flex-shrink: 0;
 }
 
-#settings-btn:hover {
+#settings-btn:hover,
+#update-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+#update-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#update-btn.spinning {
+  animation: spin 1s linear infinite;
+}
+
+.update-status {
+  margin: -8px 0 10px;
+  padding: 6px 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  text-align: center;
+}
+
+.update-status.success {
+  background: rgba(45, 206, 137, 0.1);
+  border: 1px solid rgba(45, 206, 137, 0.3);
+  color: var(--success);
+}
+
+.update-status.error {
+  background: rgba(233, 69, 96, 0.1);
+  border: 1px solid rgba(233, 69, 96, 0.4);
+  color: var(--danger);
 }
 
 /* ── Form ── */
