@@ -288,6 +288,13 @@ async function handle(message) {
       }
     }
 
+    case 'SET_PIN_OVERLAY': {
+      try {
+        await sendNativeMessage('com.umpirecoder.postprocess', message);
+      } catch { /* non-fatal */ }
+      return { success: true };
+    }
+
     case 'OPEN_FOLDER': {
       try {
         await sendNativeMessage('com.umpirecoder.postprocess', message);
@@ -327,11 +334,12 @@ async function startMatchAndInjectOverlay(matchData) {
 
 async function openOverlayWindow() {
   const win = await chrome.windows.create({
-    url:   chrome.runtime.getURL('overlay/overlay.html'),
-    type:  'popup',
-    width: 320,
-    left:  20,
-    top:   20,
+    url:     chrome.runtime.getURL('overlay/overlay.html'),
+    type:    'popup',
+    width:   320,
+    left:    20,
+    top:     20,
+    focused: true,
   });
   overlayWindowId = win.id;
 }

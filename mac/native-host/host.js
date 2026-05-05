@@ -139,6 +139,10 @@ async function launchObs(port, customPath) {
   // -g = open without bringing OBS to the foreground, so Chrome popup stays open.
   spawn('open', ['-g', obsPath], { detached: true, stdio: 'ignore' }).unref();
   await waitForPort(port, 20_000);
+  // Minimize OBS to dock now that its WebSocket is ready.
+  try {
+    execFileSync('osascript', ['-e', 'tell application "OBS" to set miniaturized of window 1 to true'], { encoding: 'utf8', timeout: 3_000 });
+  } catch { /* non-fatal */ }
 }
 
 // ── Video readiness check ─────────────────────────────────────────────────────
@@ -228,6 +232,21 @@ async function main() {
     } catch (err) {
       sendMessage({ success: false, error: err.message });
     }
+    return;
+  }
+
+  if (msg.type === 'SET_PIN_OVERLAY') {
+    // macOS has no API to set another app's window always-on-top from outside.
+    // Best effort: raise the Umpire Coder window to front when pinned.
+    if (msg.pinned) {
+      try {
+        execFileSync('osascript', ['-e',
+          'tell application "System Events" to tell process "Google Chrome" to set frontmost to true\n' +
+          'tell application "System Events" to tell process "Google Chrome" to perform action "AXRaise" of first window whose name is "Umpire Coder"'
+        ], { encoding: 'utf8', timeout: 3_000 });
+      } catch { /* non-fatal */ }
+    }
+    sendMessage({ success: true });
     return;
   }
 

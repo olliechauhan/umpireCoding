@@ -162,9 +162,7 @@ async function launchObs(port, customPath) {
   if (process.platform === 'darwin') {
     spawn('open', [obsPath], { detached: true, stdio: 'ignore' }).unref();
   } else {
-    // --minimize-to-tray prevents OBS from stealing Chrome focus (which would
-    // close the extension popup before the match can start).
-    spawn(obsPath, ['--minimize-to-tray'], { detached: true, stdio: 'ignore', cwd: dirname(obsPath) }).unref();
+    spawn(obsPath, [], { detached: true, stdio: 'ignore', cwd: dirname(obsPath) }).unref();
   }
 
   await waitForPort(port, 20_000);
@@ -223,6 +221,21 @@ async function main() {
       } else {
         spawn('open', [target], { detached: true, stdio: 'ignore' }).unref();
       }
+      sendMessage({ success: true });
+    } catch (err) {
+      sendMessage({ success: false, error: err.message });
+    }
+    return;
+  }
+
+  if (msg.type === 'SET_PIN_OVERLAY') {
+    try {
+      const insertAfter = msg.pinned ? -1 : -2; // HWND_TOPMOST : HWND_NOTOPMOST
+      execFileSync('powershell', ['-NonInteractive', '-Command', `
+        Add-Type -TypeDefinition 'using System; using System.Runtime.InteropServices; public class WinPin { [DllImport("user32.dll")] public static extern IntPtr FindWindow(string c, string t); [DllImport("user32.dll")] public static extern bool SetWindowPos(IntPtr h, IntPtr i, int x, int y, int w, int ht, uint f); }' -ErrorAction SilentlyContinue
+        $hwnd = [WinPin]::FindWindow([NullString]::Value, "Umpire Coder")
+        if ($hwnd -ne [IntPtr]::Zero) { [WinPin]::SetWindowPos($hwnd, [IntPtr]::new(${insertAfter}), 0, 0, 0, 0, 3) | Out-Null }
+      `], { encoding: 'utf8', timeout: 5_000 });
       sendMessage({ success: true });
     } catch (err) {
       sendMessage({ success: false, error: err.message });
