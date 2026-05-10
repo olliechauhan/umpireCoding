@@ -145,6 +145,27 @@
         </div>
       </section>
 
+      <!-- ── Clip Duration ──────────────────────────────────────────────── -->
+      <section class="card">
+        <h2>Clip Duration</h2>
+        <p class="hint">How much video to capture around each tagged event. Total cannot exceed 45 seconds.</p>
+        <div class="field-row three-col">
+          <div class="field">
+            <label for="clip-pre">Pre-Tag (seconds)</label>
+            <input type="number" id="clip-pre" min="0" max="45" step="1" value="30">
+          </div>
+          <div class="field">
+            <label for="clip-post">Post-Tag (seconds)</label>
+            <input type="number" id="clip-post" min="0" max="45" step="1" value="15">
+          </div>
+          <div class="field">
+            <label>Total Duration</label>
+            <input type="text" id="clip-total" readonly value="45s">
+          </div>
+        </div>
+        <span id="clip-duration-error" class="field-hint" style="color:var(--color-error,#c0392b);display:none">Total clip duration cannot exceed 45 seconds.</span>
+      </section>
+
     </main>
 
     <footer class="page-footer">

@@ -251,6 +251,8 @@ async function handle(message) {
           jsonFilename,
           videoPath:     outputPath,
           clipOutputDir,
+          clipPre:  settings.clipPre  ?? 30,
+          clipPost: settings.clipPost ?? 15,
         });
       } catch (err) {
         console.warn('[BG] Native host unavailable:', err.message);

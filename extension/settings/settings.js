@@ -41,6 +41,10 @@ function populate(s) {
   set('crop-margin',   String(s.cropOverlayMargin ?? 200));
   document.getElementById('crop-margin-value').textContent = s.cropOverlayMargin ?? 200;
 
+  set('clip-pre',  String(s.clipPre  ?? 30));
+  set('clip-post', String(s.clipPost ?? 15));
+  updateClipTotal();
+
   const sport = s.sport ?? 'field_hockey';
   set('sport', sport);
 
@@ -175,6 +179,10 @@ function bindEvents() {
     document.getElementById('crop-margin-value').textContent = e.target.value;
   });
 
+  // Live-update clip total and validate
+  document.getElementById('clip-pre').addEventListener('input', updateClipTotal);
+  document.getElementById('clip-post').addEventListener('input', updateClipTotal);
+
   // Test OBS connection
   document.getElementById('test-conn-btn').addEventListener('click', async () => {
     const statusEl = document.getElementById('test-conn-status');
@@ -210,6 +218,12 @@ function bindEvents() {
   // Save all settings
   document.getElementById('save-btn').addEventListener('click', async () => {
     const statusEl = document.getElementById('save-status');
+    const pre  = parseInt(get('clip-pre'),  10) || 0;
+    const post = parseInt(get('clip-post'), 10) || 0;
+    if (pre + post > 45) {
+      setStatus(statusEl, 'Total clip duration cannot exceed 45 seconds.', 'error');
+      return;
+    }
     setStatus(statusEl, 'Saving…', '');
     const result = await msg({ type: 'SAVE_SETTINGS', settings: gather() });
     if (result.error) {
@@ -238,7 +252,21 @@ function gather() {
     clipOutputDirectory: outputDir,
     sport:               get('sport') || 'field_hockey',
     tagTypes:            tagsFromDOM(),
+    clipPre:             Math.min(45, Math.max(0, parseInt(get('clip-pre'))  || 30)),
+    clipPost:            Math.min(45, Math.max(0, parseInt(get('clip-post')) || 15)),
   };
+}
+
+// ── Clip duration helpers ─────────────────────────────────────────────────────
+
+function updateClipTotal() {
+  const pre   = parseInt(document.getElementById('clip-pre').value,  10) || 0;
+  const post  = parseInt(document.getElementById('clip-post').value, 10) || 0;
+  const total = pre + post;
+  const errorEl = document.getElementById('clip-duration-error');
+  document.getElementById('clip-total').value = total + 's';
+  const over = total > 45;
+  errorEl.style.display = over ? '' : 'none';
 }
 
 // ── DOM helpers ───────────────────────────────────────────────────────────────

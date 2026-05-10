@@ -5,9 +5,9 @@
  * Usage:
  *   node clip_cutter.js --json <path/to/events.json> --video <path/to/recording.mp4>
  *
- * Each event produces a 45-second clip centred around the tagged moment:
- *   start = max(0, timestamp_elapsed_seconds - 30)
- *   duration = 45 seconds
+ * Each event produces a clip centred around the tagged moment:
+ *   start = max(0, timestamp_elapsed_seconds - pre)
+ *   duration = pre + post seconds (default: 30 pre + 15 post = 45s total, max 45s)
  *
  * Clips are saved to:
  *   <clip-output-dir>/<Date>_<Competition>_clips/<UmpireName>_<TagType>_<HH-MM-SS>.mp4
@@ -53,10 +53,16 @@ function parseArgs() {
   const outDir    = get('--out');   // optional override; defaults to same dir as video
 
   if (!jsonPath || !videoPath) {
-    console.error('Usage: node clip_cutter.js --json <events.json> --video <recording.mp4> [--out <output-dir>]');
+    console.error('Usage: node clip_cutter.js --json <events.json> --video <recording.mp4> [--out <output-dir>] [--pre <seconds>] [--post <seconds>]');
     process.exit(1);
   }
-  return { jsonPath: resolve(jsonPath), videoPath: resolve(videoPath), outDir };
+
+  const rawPre  = parseInt(get('--pre'),  10);
+  const rawPost = parseInt(get('--post'), 10);
+  const clipPre  = (!isNaN(rawPre)  && rawPre  >= 0) ? rawPre  : 30;
+  const clipPost = (!isNaN(rawPost) && rawPost >= 0) ? rawPost : 15;
+
+  return { jsonPath: resolve(jsonPath), videoPath: resolve(videoPath), outDir, clipPre, clipPost };
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -108,11 +114,9 @@ function secsToHHMMSS(secs) {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-const CLIP_PRE  = 30; // seconds before the event
-const CLIP_DUR  = 45; // total clip duration
-
 function main() {
-  const { jsonPath, videoPath, outDir } = parseArgs();
+  const { jsonPath, videoPath, outDir, clipPre, clipPost } = parseArgs();
+  const CLIP_DUR = clipPre + clipPost;
 
   if (!existsSync(jsonPath))  { console.error(`JSON not found: ${jsonPath}`);  process.exit(1); }
   if (!existsSync(videoPath)) { console.error(`Video not found: ${videoPath}`); process.exit(1); }
@@ -155,7 +159,7 @@ function main() {
     // Use the delay-adjusted timestamp so clips align with the recording
     const elapsed = ev.timestamp_elapsed || ev.timestamp_elapsed_live || '00:00:00';
     const evSecs  = elapsedToSecs(elapsed);
-    const start   = Math.max(0, evSecs - CLIP_PRE);
+    const start   = Math.max(0, evSecs - clipPre);
 
     const umpire  = sanitise(ev.umpire);
     const tag     = sanitise(ev.tag);

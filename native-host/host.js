@@ -279,7 +279,7 @@ async function main() {
     return;
   }
 
-  const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
+  const { jsonData, jsonFilename, videoPath, clipOutputDir, clipPre, clipPost } = msg;
 
   const baseDir = clipOutputDir || join(
     process.env.USERPROFILE || process.env.HOME || '.',
@@ -325,7 +325,8 @@ async function main() {
     try {
       const out = execFileSync(
         NODE,
-        ['clip_cutter.js', '--json', jsonPath, '--video', videoPath, '--out', matchDir],
+        ['clip_cutter.js', '--json', jsonPath, '--video', videoPath, '--out', matchDir,
+         '--pre', String(clipPre ?? 30), '--post', String(clipPost ?? 15)],
         { cwd: POST_DIR, encoding: 'utf8', timeout: 600_000 }
       );
       results.push({ type: 'clips', success: true, message: out.trim() });

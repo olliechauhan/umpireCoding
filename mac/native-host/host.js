@@ -307,7 +307,7 @@ async function main() {
     return;
   }
 
-  const { jsonData, jsonFilename, videoPath, clipOutputDir } = msg;
+  const { jsonData, jsonFilename, videoPath, clipOutputDir, clipPre, clipPost } = msg;
 
   // Default to ~/Movies/umpire-clips on macOS — ~/Documents is TCC-protected
   // and Chrome's subprocess cannot write there. ~/Movies is not protected.
@@ -363,7 +363,8 @@ async function main() {
     try {
       const out = execFileSync(
         NODE,
-        ['clip_cutter.js', '--json', jsonPath, '--video', videoPath, '--out', matchDir],
+        ['clip_cutter.js', '--json', jsonPath, '--video', videoPath, '--out', matchDir,
+         '--pre', String(clipPre ?? 30), '--post', String(clipPost ?? 15)],
         { cwd: POST_DIR, encoding: 'utf8', timeout: 600_000 }
       );
       results.push({ type: 'clips', success: true, message: out.trim() });
